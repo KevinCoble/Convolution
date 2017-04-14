@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import AIToolbox
 
 class DeepNeuralNetworkController: NSViewController  {
 
@@ -27,7 +28,9 @@ class DeepNeuralNetworkController: NSViewController  {
     //  Inputs
     var dimension = 2
     var numNodes = [16, 16, 1, 1]
-    var activation = NeuralActivationFunction.Sigmoid
+    var activation = NeuralActivationFunction.sigmoid
+    
+    var editSize : DeepChannelSize?
     
     var addingInput = false
     
@@ -35,10 +38,26 @@ class DeepNeuralNetworkController: NSViewController  {
         super.viewDidLoad()
         
         //  Set the initial values into the dialog
-        activationFunctionPopup.selectItemWithTag(activation.rawValue)
+        activationFunctionPopup.selectItem(withTag: activation.rawValue)
+        
+        if let editSize = editSize {
+            switch (editSize.numDimensions) {
+            case 1:
+                onDimensionChange(oneDOutputRadioButton)
+            case 2:
+                onDimensionChange(twoDOutputRadioButton)
+            case 3:
+                onDimensionChange(threeDOutputRadioButton)
+            case 4:
+                onDimensionChange(fourDOutputRadioButton)
+            default:
+                break
+            }
+            setFromResultSize(editSize)
+        }
     }
     
-    func setFromResultSize(size: DeepChannelSize)
+    func setFromResultSize(_ size: DeepChannelSize)
     {
         //  Set the radio button selection
         var  selectButton = oneDOutputRadioButton
@@ -46,7 +65,7 @@ class DeepNeuralNetworkController: NSViewController  {
         if (dimension == 2) { selectButton = twoDOutputRadioButton }
         if (dimension == 3) { selectButton = threeDOutputRadioButton }
         if (dimension == 4) { selectButton = fourDOutputRadioButton }
-        selectButton.state = NSOnState
+        selectButton?.state = NSOnState
         
         //  Set the node size amounts
         node1TextField.integerValue = size.dimensions[0]
@@ -65,85 +84,85 @@ class DeepNeuralNetworkController: NSViewController  {
         }
     }
     
-    @IBAction func onDimensionChange(sender: NSButton) {
+    @IBAction func onDimensionChange(_ sender: NSButton) {
         //  Get the dimension from the radio button tag
         dimension = sender.tag
         if (dimension < 4) {
             node4TextField.integerValue = 1
             node4Stepper.integerValue = 1
-            node4TextField.enabled = false
-            node4Stepper.enabled = false
+            node4TextField.isEnabled = false
+            node4Stepper.isEnabled = false
         }
         else {
-            node4TextField.enabled = true
-            node4Stepper.enabled = true
+            node4TextField.isEnabled = true
+            node4Stepper.isEnabled = true
         }
         if (dimension < 3) {
             node3TextField.integerValue = 1
             node3Stepper.integerValue = 1
-            node3TextField.enabled = false
-            node3Stepper.enabled = false
+            node3TextField.isEnabled = false
+            node3Stepper.isEnabled = false
         }
         else {
-            node3TextField.enabled = true
-            node3Stepper.enabled = true
+            node3TextField.isEnabled = true
+            node3Stepper.isEnabled = true
         }
         if (dimension < 2) {
             node2TextField.integerValue = 1
             node2Stepper.integerValue = 1
-            node2TextField.enabled = false
-            node2Stepper.enabled = false
+            node2TextField.isEnabled = false
+            node2Stepper.isEnabled = false
         }
         else {
-            node2TextField.enabled = true
-            node2Stepper.enabled = true
+            node2TextField.isEnabled = true
+            node2Stepper.isEnabled = true
         }
     }
     
-    @IBAction func onNode1TextFieldChanged(sender: NSTextField) {
+    @IBAction func onNode1TextFieldChanged(_ sender: NSTextField) {
         node1Stepper.integerValue = node1TextField.integerValue
     }
     
-    @IBAction func onNode1StepperChanged(sender: NSStepper) {
+    @IBAction func onNode1StepperChanged(_ sender: NSStepper) {
         node1TextField.integerValue = node1Stepper.integerValue
     }
     
-    @IBAction func onNode2TextFieldChanged(sender: NSTextField) {
+    @IBAction func onNode2TextFieldChanged(_ sender: NSTextField) {
         node2Stepper.integerValue = node2TextField.integerValue
     }
     
-    @IBAction func onNode2StepperChanged(sender: NSStepper) {
+    @IBAction func onNode2StepperChanged(_ sender: NSStepper) {
         node2TextField.integerValue = node2Stepper.integerValue
     }
     
-    @IBAction func onNode3TextFieldChanged(sender: NSTextField) {
+    @IBAction func onNode3TextFieldChanged(_ sender: NSTextField) {
         node3Stepper.integerValue = node3TextField.integerValue
     }
     
-    @IBAction func onNode3StepperChanged(sender: NSStepper) {
+    @IBAction func onNode3StepperChanged(_ sender: NSStepper) {
         node3TextField.integerValue = node3Stepper.integerValue
     }
     
-    @IBAction func onNode4TextFieldChanged(sender: NSTextField) {
+    @IBAction func onNode4TextFieldChanged(_ sender: NSTextField) {
         node4Stepper.integerValue = node4TextField.integerValue
     }
     
-    @IBAction func onNode4StepperChanged(sender: NSStepper) {
+    @IBAction func onNode4StepperChanged(_ sender: NSStepper) {
         node4TextField.integerValue = node4Stepper.integerValue
     }
     
-    @IBAction func onCancel(sender: NSButton) {
-        presentingViewController?.dismissViewController(self)
+    @IBAction func onCancel(_ sender: NSButton) {
+        presenting?.dismissViewController(self)
     }
     
-    @IBAction func onOK(sender: NSButton) {
-        let networkVC = presentingViewController as! NetworkViewController
+    @IBAction func onOK(_ sender: NSButton) {
+        let networkVC = presenting as! NetworkViewController
         numNodes[0] = node1TextField.integerValue
         numNodes[1] = node2TextField.integerValue
         numNodes[2] = node3TextField.integerValue
         numNodes[3] = node4TextField.integerValue
         activation = NeuralActivationFunction(rawValue: activationFunctionPopup.selectedTag())!
         networkVC.neuralNetworkEditComplete(dimension, numNodes: numNodes, activation: activation)
-        presentingViewController?.dismissViewController(self)
+        presenting?.dismissViewController(self)
     }
 }

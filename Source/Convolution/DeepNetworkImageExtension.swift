@@ -8,12 +8,13 @@
 
 import Cocoa
 import Accelerate
+import AIToolbox
 
 //  This extension gets an NSImage from the specified DeepNetwork sub-object
 
 extension DeepNetwork {
     
-    public func GetItemImage(layer: Int, channel: Int, operatorIndex: Int) -> NSImage?
+    public func GetItemImage(_ layer: Int, channel: Int, operatorIndex: Int) -> NSImage?
     {
         
         //  Get the item's data and result size
@@ -32,7 +33,7 @@ extension DeepNetwork {
             let scaling = (maxResult != minResult) ? 255.0 / (maxResult - minResult) : 0.0
             if let representation = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: results.size.dimensions[0], pixelsHigh: results.size.dimensions[1], bitsPerSample: 8, samplesPerPixel: 1, hasAlpha: false, isPlanar: false, colorSpaceName: NSCalibratedWhiteColorSpace, bytesPerRow: 0, bitsPerPixel: 8) {
                 let rowBytes = representation.bytesPerRow
-                let pixels = representation.bitmapData
+                let pixels = representation.bitmapData!
                 var index = 0
                 for y in 0..<results.size.dimensions[1] {
                     for x in 0..<results.size.dimensions[0] {

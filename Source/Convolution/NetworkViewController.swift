@@ -7,11 +7,12 @@
 //
 
 import Cocoa
+import AIToolbox
 
-enum ImageSourceSelecton : Int {
-    case Image = 0
-    case DataSourceImage
-    case SelectedItem
+enum ImageSourceSelection : Int {
+    case image = 0
+    case dataSourceImage
+    case selectedItem
 }
 
 class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
@@ -50,20 +51,24 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     @IBOutlet weak var testPath: NSPathControl!
     @IBOutlet weak var imageClassField: NSTextField!
     @IBOutlet weak var resultingClassField: NSTextField!
+    @IBOutlet weak var useGeneratedImagesCheckbox: NSButton!
     
     //  Settings
+    var usingGeneratedData = true
     var imageScaledSize = 16
     var requiredDataSources: ImageDataSource = .None
-    var imageSourceSelecton : ImageSourceSelecton = .Image
+    var imageSourceSelection : ImageSourceSelection = .image
     var addingInput = false
     var addingChannel = false
     var addingOperator = false
+    var editOperator : DeepNetworkOperator?
     var trainingRate : Float = 0.3
     var weightDecay : Float = 1.0
     var batchSize = 1
     var numEpochs = 100
     var repeatTraining = true
     var autoTest = true
+    var useGeneratedImageForTesting = false
     
     //  Input translation dictionary.  DeepNetwork class doesn't care what types of inputs it has, it just wants labels.  But this application has to know to set them
     var inputDataTypes : [String : ImageDataSource] = [:]
@@ -75,7 +80,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     var currentTestImage : NSImage?
     var currentImageData : ImageData?
     var testFiles : [LabeledImage] = []
-    var trainingImageGenerator = LabeledImageGenerator()
+    var trainingImageGenerator = LabeledImageGenerator(initIncludes: [.redHorizontalLine, .redVerticalLine], initNoise: [], initNumNoiseItems: 0)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -84,8 +89,8 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         networkOperatorTypePopUp.removeAllItems()
         let operatorTypes = DeepNetworkOperatorType.getAllTypes()
         for type in operatorTypes {
-            networkOperatorTypePopUp.addItemWithTitle(type.name)
-            networkOperatorTypePopUp.itemWithTitle(type.name)?.tag = type.type.rawValue
+            networkOperatorTypePopUp.addItem(withTitle: type.name)
+            networkOperatorTypePopUp.item(withTitle: type.name)?.tag = type.type.rawValue
         }
         
         //  Load the placeholder test image
@@ -95,10 +100,11 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         }
         
         //  Initialize the scale
-        imageScale.selectItemWithTag(imageScaledSize)
+        imageScale.selectItem(withTag: imageScaledSize)
         
         //  Start with the train images generated
         generatedTrainingImageRadioButton.state = NSOnState
+        useGeneratedImagesCheckbox.isEnabled = true
         
         //  Start with the test image viewed
         testImageRadioButton.state = NSOnState
@@ -110,8 +116,25 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         trainingRateField.floatValue = trainingRate
         weightDecayField.floatValue = weightDecay
     }
+    
+    func setImageGenerator(_ newGenerator: LabeledImageGenerator) {
+        trainingImageGenerator = newGenerator
+    }
 
-    @IBAction func imageScaleChanged(sender: NSPopUpButton) {
+    @IBAction func trainingImageSourceChanged(_ sender: NSButton) {
+        usingGeneratedData = (sender.tag == 0)
+        if (usingGeneratedData) {
+            useGeneratedImagesCheckbox.isEnabled = true
+        }
+        else {
+            generatedTrainingImageRadioButton.state = NSOffState
+            useGeneratedImageForTesting = false
+            useGeneratedImagesCheckbox.isEnabled = false
+            self.testButton.isEnabled = false
+        }
+    }
+    
+    @IBAction func imageScaleChanged(_ sender: NSPopUpButton) {
         imageScaledSize = imageScale.selectedTag()
         if let image = currentTestImage {
             currentImageData = ImageData(image: image, size: imageScaledSize, sources: requiredDataSources)
@@ -120,51 +143,51 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         setDisplayImage()
     }
    
-    @IBAction func imageSourceChanged(sender: NSButton) {
-        if let newSource = ImageSourceSelecton(rawValue: sender.tag) {
-            imageSourceSelecton = newSource
+    @IBAction func imageSourceChanged(_ sender: NSButton) {
+        if let newSource = ImageSourceSelection(rawValue: sender.tag) {
+            imageSourceSelection = newSource
             setDisplayImage()
         }
     }
     
-    @IBAction func onImageDataSourceChanged(sender: NSPopUpButton) {
+    @IBAction func onImageDataSourceChanged(_ sender: NSPopUpButton) {
         setDisplayImage()
     }
     
-    @IBAction func onTrainRepeatChanged(sender: AnyObject) {
+    @IBAction func onTrainRepeatChanged(_ sender: AnyObject) {
         repeatTraining = (repeatTrainCheckbox.state == NSOnState)
     }
     
-    @IBAction func onBatchSizeTextFieldChanged(sender: NSTextField) {
+    @IBAction func onBatchSizeTextFieldChanged(_ sender: NSTextField) {
         batchSizeStepper.integerValue = batchSizeTextField.integerValue
         batchSize = batchSizeTextField.integerValue
     }
     
-    @IBAction func onBatchSizeStepperChanged(sender: NSStepper) {
+    @IBAction func onBatchSizeStepperChanged(_ sender: NSStepper) {
         batchSizeTextField.integerValue = batchSizeStepper.integerValue
         batchSize = batchSizeStepper.integerValue
     }
     
-    @IBAction func onNumEpochsTextFieldChanged(sender: NSTextField) {
+    @IBAction func onNumEpochsTextFieldChanged(_ sender: NSTextField) {
         numEpochsStepper.integerValue = numEpochsTextField.integerValue
         numEpochs = numEpochsTextField.integerValue
     }
     
-    @IBAction func onNumEpochsStepperChanged(sender: NSStepper) {
+    @IBAction func onNumEpochsStepperChanged(_ sender: NSStepper) {
         numEpochsTextField.integerValue = numEpochsStepper.integerValue
         numEpochs = numEpochsStepper.integerValue
     }
     
-    @IBAction func onTrainingRateChanged(sender: NSTextField) {
+    @IBAction func onTrainingRateChanged(_ sender: NSTextField) {
         trainingRate = trainingRateField.floatValue
     }
     
-    @IBAction func onWeightDecayChanged(sender: NSTextField) {
+    @IBAction func onWeightDecayChanged(_ sender: NSTextField) {
         weightDecay = weightDecayField.floatValue
     }
     
     var isTraining = false
-    @IBAction func onTrain(sender: NSButton) {
+    @IBAction func onTrain(_ sender: NSButton) {
         if (isTraining) {
             //  We are already training, stop now
             trainButton.title = "Stopping"
@@ -177,17 +200,17 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
             isTraining = true
             trainProgress.maxValue = Double(numEpochs)
             trainProgress.doubleValue = 0.0
-            trainProgress.indeterminate = repeatTraining
+            trainProgress.isIndeterminate = repeatTraining
             trainProgress.startAnimation(self)
             
             //  Start the training in another thread
-            dispatch_async(dispatch_get_global_queue(Int(QOS_CLASS_USER_INITIATED.rawValue), 0)) {
+            DispatchQueue.global(qos: DispatchQoS.QoSClass.userInitiated).async {
                 
                 //  Train for each of the specified epochs
                 self.train()
                 self.isTraining = false
                 
-                dispatch_async(dispatch_get_main_queue()) {
+                DispatchQueue.main.async {
                     //  Set the last training image for viewing
                     self.setDisplayImage()
                     self.imageClassField.integerValue = self.currentTestLabel
@@ -246,8 +269,8 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                     if (isTraining) {
                         deepNetwork.updateWeights(trainingRate, weightDecay: weightDecay)
                         
-                        dispatch_async(dispatch_get_main_queue()) {
-                            self.trainProgress.incrementBy(1.0)
+                        DispatchQueue.main.async {
+                            self.trainProgress.increment(by: 1.0)
                         }
                     }
                 }
@@ -256,7 +279,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
             
             //  If auto-testing, test now
             if (self.autoTest) {
-                dispatch_sync(dispatch_get_main_queue()) {
+                DispatchQueue.main.sync {
                     self.testNetwork(self.testButton)
                 }
             }
@@ -267,12 +290,12 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     {
         //  Get the image to be shown
         var image : NSImage?
-        switch imageSourceSelecton {
-        case .Image:
+        switch imageSourceSelection {
+        case .image:
             image = currentImageData?.getScaledImage()
-        case .DataSourceImage:
+        case .dataSourceImage:
             image = currentImageData?.getDataSourceImage(ImageDataSource(rawValue: imageDataSelection.selectedTag()))
-        case .SelectedItem:
+        case .selectedItem:
             let layer = layersTable.selectedRow
             if (layer >= 0) {
                 let channel = channelTable.selectedRow
@@ -286,8 +309,8 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
             let targetRect = NSRect(x: 0, y: 0, width: 128, height: 128)
             let targetImage = NSImage(size: NSSize(width: 128, height: 128))
             targetImage.lockFocus()
-            image.drawInRect(targetRect, fromRect: NSRect(origin: NSZeroPoint, size: image.size), operation: .CompositeCopy, fraction: 1.0, respectFlipped : true,
-                hints: [NSImageHintInterpolation : NSImageInterpolation.None.rawValue]);
+            image.draw(in: targetRect, from: NSRect(origin: NSZeroPoint, size: image.size), operation: .copy, fraction: 1.0, respectFlipped : true,
+                hints: [NSImageHintInterpolation : NSImageInterpolation.none.rawValue]);
             targetImage.unlockFocus()
             dataImage.image = targetImage
         }
@@ -296,10 +319,10 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         }
     }
     
-    @IBAction func onDeleteInput(sender: AnyObject) {
+    @IBAction func onDeleteInput(_ sender: AnyObject) {
         let row = inputTable.selectedRow
         if (row >= 0) {
-            inputDataTypes.removeValueForKey(deepNetwork.inputs[row].inputID)
+            inputDataTypes.removeValue(forKey: deepNetwork.getInput(atIndex: row).inputID)
             deepNetwork.removeInput(row)
             checkDeepNetwork()
         }
@@ -324,7 +347,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         }
     }
     
-    @IBAction func onAddLayer(sender: AnyObject) {
+    @IBAction func onAddLayer(_ sender: AnyObject) {
         //  Add a new layer
         let newLayer = DeepLayer()
         deepNetwork.addLayer(newLayer)
@@ -334,7 +357,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         layersTable.reloadData()
     }
     
-    @IBAction func onDeleteLayer(sender: AnyObject) {
+    @IBAction func onDeleteLayer(_ sender: AnyObject) {
         let row = layersTable.selectedRow
         if (row >= 0) {
             deepNetwork.removeLayer(row)
@@ -345,7 +368,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         layersTable.reloadData()
     }
     
-    @IBAction func onDeleteChannel(sender: AnyObject) {
+    @IBAction func onDeleteChannel(_ sender: AnyObject) {
         let layer = layersTable.selectedRow
         if (layer >= 0) {
             let row = channelTable.selectedRow
@@ -356,31 +379,56 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         }
     }
     
-    @IBAction func onAddOperator(sender: AnyObject) {
+    @IBAction func onAddOperator(_ sender: AnyObject) {
         //  Get the type from the pop-up selection
         if let newOperatorType = DeepNetworkOperatorType(rawValue : networkOperatorTypePopUp.selectedTag()) {
             switch newOperatorType {
-            case .Convolution2DOperation:
+            case .convolution2DOperation:
                 addingOperator = true
-                performSegueWithIdentifier("configure2DConvolution", sender: self)
+                performSegue(withIdentifier: "configure2DConvolution", sender: self)
                 break
-            case .PoolingOperation:
+            case .poolingOperation:
                 addingOperator = true
-                performSegueWithIdentifier("configurePooling", sender: self)
+                performSegue(withIdentifier: "configurePooling", sender: self)
                 break
-            case .FeedForwardNetOperation:
+            case .feedForwardNetOperation:
                 addingOperator = true
-                performSegueWithIdentifier("configureNeuralNet", sender: self)
+                performSegue(withIdentifier: "configureNeuralNet", sender: self)
                 break
             }
             checkDeepNetwork()
         }
     }
     
-    @IBAction func onEditOperator(sender: AnyObject) {
+    @IBAction func onEditOperator(_ sender: AnyObject) {
+        //  Get the selected operator
+        let layer = layersTable.selectedRow
+        if (layer >= 0) {
+            let channel = channelTable.selectedRow
+            if (channel >= 0) {
+                let row = operationsTable.selectedRow
+                if (row >= 0) {
+                    if let networkOperator = deepNetwork.getNetworkOperator(layer, channelIndex: channel, operatorIndex: row) {
+                        editOperator = networkOperator
+                        addingOperator = false
+                        switch (networkOperator.getType()) {
+                        case .convolution2DOperation:
+                            performSegue(withIdentifier: "configure2DConvolution", sender: self)
+                            break
+                        case .poolingOperation:
+                            performSegue(withIdentifier: "configurePooling", sender: self)
+                            break
+                        case .feedForwardNetOperation:
+                            performSegue(withIdentifier: "configureNeuralNet", sender: self)
+                            break
+                        }
+                    }
+                }
+            }
+        }
     }
     
-    @IBAction func onDeleteOperator(sender: AnyObject) {
+    @IBAction func onDeleteOperator(_ sender: AnyObject) {
         let layer = layersTable.selectedRow
         if (layer >= 0) {
             let channel = channelTable.selectedRow
@@ -388,6 +436,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                 let row = operationsTable.selectedRow
                 if (row >= 0) {
                     deepNetwork.removeNetworkOperator(layer, channelIndex: channel, operatorIndex: row)
+                    operationsTable.reloadData()
                     checkDeepNetwork()
                 }
             }
@@ -402,7 +451,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
             topologyErrorField.stringValue = firstError
         }
         else {
-            if (deepNetwork.layers.count > 0) {
+            if (deepNetwork.numLayers > 0) {
                 topologyErrorField.stringValue = "Valid network"
                 
                 //  With a valid network, feedforward the current image for display
@@ -421,19 +470,56 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         channelTable.reloadData()
     }
     
-    override func prepareForSegue(segue: NSStoryboardSegue, sender: AnyObject?) {
+    @IBAction func initializeDeepNetwork(_ sender: AnyObject)
+    {
+        //  Have the network re-randomize the any learning parameters
+        deepNetwork.initializeParameters()
+    }
+    
+    @IBAction func gradientCheckDeepNetwork(_ sender: AnyObject)
+    {
+        //  Clear the gradient accumulations
+        deepNetwork.startBatch()
+        
+        //  Get a training example
+        let trainingImage = trainingImageGenerator.getImage()
+        
+        //  Get the image data
+        currentImageData = ImageData(image: trainingImage.image!, size: imageScaledSize, sources: requiredDataSources)
+        
+        //  Set the inputs into the deep network
+        setNetworkInputs()
+        
+        //  Feed the data forward
+        deepNetwork.feedForward()
+        
+        //  Backpropagate the error
+        deepNetwork.backPropagate(trainingImage.label)
+        
+        //  Have the network do a gradient check
+        if deepNetwork.gradientCheck(ε: 1.0E-04, Δ: 0.01)
+        {
+            infoAlert("Gradient Check Successful", information: "Gradient Check")
+        }
+        else {
+            warningAlert("Gradient Check Unsuccessful", information: "Gradient Check")
+        }
+    }
+    
+    override func prepare(for segue: NSStoryboardSegue, sender: Any?) {
         if segue.identifier == "addChannel" {
-//!!            let channelVC = segue.destinationController as! ChannelViewController
             addingChannel = true
         }
         if segue.identifier == "addInput" {
-//!!            let channelVC = segue.destinationController as! ChannelViewController
             addingInput = true
         }
         if segue.identifier == "configure2DConvolution" {
             let convolutionVC = segue.destinationController as! ConvolutionViewController
             if (addingOperator) {
-                convolutionVC.convolution = Convolution2D(usingMatrix: .HorizontalEdge3)
+                convolutionVC.convolution = Convolution2D(usingMatrix: .horizontalEdge3)
+            }
+            else {
+                convolutionVC.convolution = (editOperator as! Convolution2D)
             }
         }
         if segue.identifier == "configurePooling" {
@@ -442,16 +528,31 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                 poolingVC.initialOperation = 0
                 poolingVC.initialReduction = 4
             }
+            else {
+                if let pool = editOperator as? Pooling {
+                    poolingVC.initialOperation = pool.poolType.rawValue
+                    poolingVC.initialReduction = pool.reductionLevels[0]
+                }
+            }
         }
         if segue.identifier == "configureNeuralNet" {
-//!!            let neuralNetVC = segue.destinationController as! DeepNeuralNetworkController
             if (addingOperator) {
                 //  Leave at defaults for now
             }
+            else {
+                let neuralNetVC = segue.destinationController as! DeepNeuralNetworkController
+                if let net = editOperator as? DeepNeuralNetwork {
+                    neuralNetVC.editSize = net.getResultSize()
+                }
+            }
+        }
+        if segue.identifier == "imageGenerator" {
+            let imageGeneratorVC = segue.destinationController as! LabeledImageGeneratorViewController
+            imageGeneratorVC.generator = trainingImageGenerator
         }
     }
     
-    func inputEditComplete(inputID inputID: String, dataType: ImageDataSource)
+    func inputEditComplete(inputID: String, dataType: ImageDataSource)
     {
         //  Verify the ID is unique
         let idAlreadyUsed = (inputDataTypes[inputID] != nil)
@@ -461,7 +562,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                 self.warningAlert("Input ID already in use", information: "Input IDs must be unigue")
             }
             else {
-                let size = DeepChannelSize(numDimensions: 2, dimensions: [imageScaledSize, imageScaledSize])
+                let size = DeepChannelSize(dimensionCount: 2, dimensionValues: [imageScaledSize, imageScaledSize])
                 let newInput = DeepNetworkInput(inputID: inputID, size: size, values: [])
                 deepNetwork.addInput(newInput)
                 inputDataTypes[inputID] = dataType  //  Store type of data for application
@@ -477,13 +578,12 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         checkDeepNetwork()
     }
    
-    func channelEditComplete(channelID channelID: String, inputSourceID: String)
+    func channelEditComplete(channelID: String, inputSourceID: String)
     {
         let layer = layersTable.selectedRow
         if (layer >= 0) {
             if (addingChannel) {
-                let newChannel = DeepChannel(identifier: channelID)
-                newChannel.sourceChannelID = inputSourceID
+                let newChannel = DeepChannel(identifier: channelID, sourceChannel: inputSourceID)
                 deepNetwork.addChannel(layer, newChannel: newChannel)
                 operationsTable.reloadData()
             }
@@ -498,7 +598,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         checkDeepNetwork()
     }
     
-    func convolution2DEditComplete(editedConvolution: Convolution2D)
+    func convolution2DEditComplete(_ editedConvolution: Convolution2D)
     {
         let layer = layersTable.selectedRow
         if (layer >= 0) {
@@ -508,7 +608,10 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                     deepNetwork.addNetworkOperator(layer, channelIndex: channelIndex, newOperator: editedConvolution)
                 }
                 else {
-                    //!!
+                    let row = operationsTable.selectedRow
+                    if (row >= 0) {
+                        deepNetwork.replaceNetworkOperator(layer, channelIndex: channelIndex, operatorIndex: row, newOperator: editedConvolution)
+                    }
                 }
                 
                 //  Update the table
@@ -518,7 +621,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         }
     }
     
-    func poolingEditComplete(operation: Int, reduction: Int)
+    func poolingEditComplete(_ operation: Int, reduction: Int)
     {
         if let operation = PoolingType(rawValue: operation) {
             let layer = layersTable.selectedRow
@@ -532,21 +635,9 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                         deepNetwork.addNetworkOperator(layer, channelIndex: channelIndex, newOperator: pooling)
                     }
                     else {
-//!!            let row = poolingTable.selectedRow
-//            let row = 0
-//            if (row >= 0) {
-//                poolings[row].poolType = operation!
-//                let sizeChanged = (poolings[row].reduceLevel == reduction)
-//                poolings[row].reduceLevel = reduction
-//                //  Get the pooling
-//                poolings[row].producePool(convolutions)
-//                
-//                //  Update any network layer that uses the pooling as the source
-//                if sizeChanged { updateLayerInputCounts() }
-//                
-//                //  layers use image, convolutions and poolings, update them
-//                updateLayers()
-//            }
+                        let poolingOperator = editOperator as! Pooling
+                        poolingOperator.setReductionLevel(0, newLevel: reduction)
+                        poolingOperator.setReductionLevel(1, newLevel: reduction)
                     }
                 }
             }
@@ -557,10 +648,10 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         operationsTable.reloadData()
     }
     
-    func neuralNetworkEditComplete(dimension : Int, numNodes: [Int], activation: NeuralActivationFunction)
+    func neuralNetworkEditComplete(_ dimension : Int, numNodes: [Int], activation: NeuralActivationFunction)
     {
         //  Create the size element for the network
-        let size = DeepChannelSize(numDimensions: dimension, dimensions: numNodes)
+        let size = DeepChannelSize(dimensionCount: dimension, dimensionValues: numNodes)
         let layer = layersTable.selectedRow
         if (layer >= 0) {
             if (layer >= 0) {
@@ -569,6 +660,13 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                     if (addingOperator) {
                         let neuralNet = DeepNeuralNetwork(activation: activation, size: size)
                         deepNetwork.addNetworkOperator(layer, channelIndex: channelIndex, newOperator: neuralNet)
+                    }
+                    else {
+                        let row = operationsTable.selectedRow
+                        if (row >= 0) {
+                            let neuralNet = DeepNeuralNetwork(activation: activation, size: size)
+                            deepNetwork.replaceNetworkOperator(layer, channelIndex: channelIndex, operatorIndex: row, newOperator: neuralNet)
+                        }
                     }
                 }
             }
@@ -579,19 +677,19 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         operationsTable.reloadData()
     }
 
-    @IBAction func selectTestPath(sender: NSButton) {
+    @IBAction func selectTestPath(_ sender: NSButton) {
         let openPanel = NSOpenPanel()
         openPanel.title = "Choose a test configuration file"
-        openPanel.beginWithCompletionHandler(){(result:Int) -> Void in
+        openPanel.begin(){(result:Int) -> Void in
             if (result == NSFileHandlingPanelOKButton) {
                 do {
                     //  Show the selected path
-                    self.testPath.URL = openPanel.URL
+                    self.testPath.url = openPanel.url
                     
                     //  Load the test files
-                    if let path = openPanel.URL?.path {
+                    if let path = openPanel.url?.path {
                         try self.loadTestFiles(path)
-                        self.testButton.enabled = true;
+                        self.testButton.isEnabled = true
                     }
                 }
                 catch {
@@ -613,7 +711,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         }
     }
     
-    func loadTestFiles(path: String) throws  {
+    func loadTestFiles(_ path: String) throws  {
         testFiles = []
         
         //  Load the property list with the labels and image file names
@@ -623,7 +721,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         
         //  Iterate through each item
         let array = dictionary["elements"] as! NSArray
-        let nspath = NSString(string: path).stringByDeletingLastPathComponent
+        let nspath = NSString(string: path).deletingLastPathComponent
         for element in array {
             let elementDict = element as! [String: AnyObject]
             if let label = elementDict["result"] as? Int {
@@ -638,80 +736,120 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         }
     }
     
-    @IBAction func testNetwork(sender: NSButton) {
-        //  Make sure we have test data
-        if testFiles.count == 0 { return }
-        
+    @IBAction func testNetwork(_ sender: NSButton) {
         //  Make sure we have a deep network
-        if (!deepNetwork.validated) { return }
+        if (!deepNetwork.isValidated) { return }
         
-        //  Iterate across all the test images
         var errorSum: Float = 0.0
         var classifyCount = 0
-        for testImage in testFiles {
-            //  Set the image
-            currentTestImage = testImage.image
+        var totalTestFiles = 1
+        if (!useGeneratedImageForTesting) {
+            //  Make sure we have test data
+            totalTestFiles = testFiles.count
+            if (totalTestFiles == 0 ){ return }
             
-            //  Get the image data
-            currentImageData = ImageData(image: currentTestImage!, size: imageScaledSize, sources: requiredDataSources)
-            
-            //  Set the inputs into the deep network
-            setNetworkInputs()
-            
-            //  Feed the data forward
-            deepNetwork.feedForward()
-            let resultClass = deepNetwork.getResultClass()
-            
-            //  Accumulate the error
-            errorSum += deepNetwork.getTotalError(testImage.label)
-            if (resultClass == testImage.label) { classifyCount += 1 }
+            //  Iterate across all the test images
+            for testImage in testFiles {
+                //  Set the image
+                currentTestImage = testImage.image
+                
+                //  Get the image data
+                currentImageData = ImageData(image: currentTestImage!, size: imageScaledSize, sources: requiredDataSources)
+                
+                //  Set the inputs into the deep network
+                setNetworkInputs()
+                
+                //  Feed the data forward
+                deepNetwork.feedForward()
+                let resultClass = deepNetwork.getResultClass()
+                
+                //  Accumulate the error
+                errorSum += deepNetwork.getTotalError(testImage.label)
+                if (resultClass == testImage.label) { classifyCount += 1 }
+            }
+        }
+        else {
+            //  Generate 100 images for testing
+            totalTestFiles = 100
+            for _ in 0..<totalTestFiles {
+                //  Get an image
+                let trainingImage = trainingImageGenerator.getImage()
+                
+                currentTestImage = trainingImage.image
+                currentTestLabel = trainingImage.label
+                
+                //  Get the image data
+                currentImageData = ImageData(image: currentTestImage!, size: imageScaledSize, sources: requiredDataSources)
+                
+                //  Set the inputs into the deep network
+                setNetworkInputs()
+                
+                //  Feed the data forward
+                deepNetwork.feedForward()
+                let resultClass = deepNetwork.getResultClass()
+                
+                //  Accumulate the error
+                errorSum += deepNetwork.getTotalError(trainingImage.label)
+                if (resultClass == trainingImage.label) { classifyCount += 1 }
+            }
         }
         
         totalErrorField.floatValue = errorSum
-        classifyPercentField.floatValue = Float(classifyCount) * 100.0 / Float(testFiles.count)
+        classifyPercentField.floatValue = Float(classifyCount) * 100.0 / Float(totalTestFiles)
     }
     
-    @IBAction func onAutoTestChange(sender: NSButton) {
+    @IBAction func onAutoTestChange(_ sender: NSButton) {
         autoTest = (sender.state == NSOnState)
     }
     
+    @IBAction func onUseGeneratedImageChange(_ sender: NSButton) {
+        useGeneratedImageForTesting = (sender.state == NSOnState)
+        if useGeneratedImageForTesting {
+            self.testButton.isEnabled = true
+        }
+    }
+    
     //  TableView methods
-    func numberOfRowsInTableView(aTableView: NSTableView) -> Int
+    func numberOfRows(in aTableView: NSTableView) -> Int
     {
         if (aTableView == inputTable) {
-            return deepNetwork.inputs.count
+            return deepNetwork.numInputs
         }
         else if (aTableView == layersTable) {
-            return deepNetwork.layers.count
+            return deepNetwork.numLayers
         }
         else if (aTableView == channelTable) {
-            let layer = layersTable.selectedRow
-            if (layer < 0) { return 0 }
-            return deepNetwork.layers[layer].channels.count
+            let layerIndex = layersTable.selectedRow
+            if (layerIndex < 0 || layerIndex >= deepNetwork.numLayers) { return 0 }
+            let layer = deepNetwork.getLayer(atIndex: layerIndex)
+            return layer.numChannels
         }
         else if (aTableView == operationsTable) {
-            let layer = layersTable.selectedRow
-            if (layer < 0) { return 0 }
+            let layerIndex = layersTable.selectedRow
+            if (layerIndex < 0 || layerIndex > deepNetwork.numLayers) { return 0 }
+            let layer = deepNetwork.getLayer(atIndex: layerIndex)
             let channelIndex = channelTable.selectedRow
-            if (channelIndex < 0) { return 0 }
-            return deepNetwork.layers[layer].channels[channelIndex].networkOperators.count
+            if (channelIndex < 0 || channelIndex >= layer.numChannels) { return 0 }
+            let channel = layer.getChannel(atIndex: channelIndex)
+            return channel.numOperators
         }
         else if (aTableView == outputTable) {
-            if let lastLayer = deepNetwork.layers.last {
-                if let lastChannel = lastLayer.channels.last {
-                    let results = lastChannel.getFinalResult()
-                    return results.count
-                }
-            }
+            if (deepNetwork.numLayers <= 0) { return 0 }
+            let lastLayer = deepNetwork.getLayer(atIndex: deepNetwork.numLayers-1)
+            if (lastLayer.numChannels <= 0) { return 0 }
+            let lastChannel = lastLayer.getChannel(atIndex: lastLayer.numChannels-1)
+            let results = lastChannel.getFinalResult()
+            return results.count
         }
         return 0
     }
     
-    func tableView(tableView: NSTableView, objectValueForTableColumn tableColumn: NSTableColumn?, row: Int) -> AnyObject?
+    func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any?
     {
         if (tableView == inputTable) {
             if let columnIdentifier = tableColumn?.identifier {
-                let inputID = deepNetwork.inputs[row].inputID
+                let input = deepNetwork.getInput(atIndex: row)
+                let inputID = input.inputID
                 switch columnIdentifier {
                 case "Name":
                     return inputID
@@ -733,60 +871,70 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                     case "Index":
                         return String(row)
                     case "Channels":
-                        return String(deepNetwork.layers[row].channels.count)
+                        let layer = deepNetwork.getLayer(atIndex: row)
+                        return String(layer.numChannels)
                     default:
                         break
                 }
             }
         }
         else if (tableView == channelTable) {
-            let layer = layersTable.selectedRow
-            if (layer < 0) { return "" }
+            let layerIndex = layersTable.selectedRow
+            if (layerIndex < 0 || layerIndex >= deepNetwork.numLayers) { return "" }
+            let layer = deepNetwork.getLayer(atIndex: layerIndex)
+            let channel = layer.getChannel(atIndex: row)
             if let columnIdentifier = tableColumn?.identifier {
                 switch columnIdentifier {
                 case "Index":
                     return String(row)
                 case "Identifier":
-                    return deepNetwork.layers[layer].channels[row].idString
+                    return channel.idString
                 case "SourceID":
-                    return deepNetwork.layers[layer].channels[row].sourceChannelID
+                    return channel.sourceChannelID
                 case "Output":
-                    return deepNetwork.layers[layer].channels[row].resultSize.asString()
+                    return channel.resultSize.asString()
                 default:
                     break
                 }
             }
         }
         else if (tableView == operationsTable) {
-            let layer = layersTable.selectedRow
-            if (layer < 0) { return "" }
+            let layerIndex = layersTable.selectedRow
+            if (layerIndex < 0 || layerIndex >= deepNetwork.numLayers) { return "" }
+            let layer = deepNetwork.getLayer(atIndex: layerIndex)
             let channelIndex = channelTable.selectedRow
-            if (channelIndex < 0) { return "" }
-            if let columnIdentifier = tableColumn?.identifier {
-                switch columnIdentifier {
-                case "Type":
-                    return deepNetwork.layers[layer].channels[channelIndex].networkOperators[row].getType().getString()
-                case "Details":
-                    return deepNetwork.layers[layer].channels[channelIndex].networkOperators[row].getDetails()
-                default:
-                    break
+            if (channelIndex < 0 || channelIndex >= layer.numChannels) { return "" }
+            let channel = layer.getChannel(atIndex: channelIndex)
+            if let networkOperator = channel.getNetworkOperator(row) {
+                if let columnIdentifier = tableColumn?.identifier {
+                    switch columnIdentifier {
+                    case "Type":
+                        return networkOperator.getType().getString()
+                    case "Details":
+                        return networkOperator.getDetails()
+                    default:
+                        break
+                    }
                 }
+            }
+            else {
+                return ""
             }
         }
         else if (tableView == outputTable) {
-            if let lastLayer = deepNetwork.layers.last {
-                if let lastChannel = lastLayer.channels.last {
-                    let results = lastChannel.getFinalResult()
-                    if let columnIdentifier = tableColumn?.identifier {
-                        switch columnIdentifier {
-                        case "Node":
-                            return String(row)
-                        case "Output":
-                            return String(results[row])
-                        default:
-                            break
-                        }
-                    }
+            if (deepNetwork.numLayers <= 0) { return 0 }
+            let lastLayer = deepNetwork.getLayer(atIndex: deepNetwork.numLayers-1)
+            if (lastLayer.numChannels <= 0) { return 0 }
+            let lastChannel = lastLayer.getChannel(atIndex: lastLayer.numChannels-1)
+            let results = lastChannel.getFinalResult()
+            if let columnIdentifier = tableColumn?.identifier {
+                switch columnIdentifier {
+                case "Node":
+                    return String(row)
+                case "Output":
+                    return String(results[row])
+                default:
+                    break
                 }
             }
         }
@@ -794,31 +942,31 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         return nil
     }
     
-    func tableViewSelectionDidChange(notification: NSNotification) {
+    func tableViewSelectionDidChange(_ notification: Notification) {
         let tableView = notification.object as! NSTableView
         if (tableView == inputTable) {
             let row = layersTable.selectedRow
             if (row >= 0) {
-                deleteInputButton.enabled = true
+                deleteInputButton.isEnabled = true
             }
             else {
-                deleteInputButton.enabled = false
+                deleteInputButton.isEnabled = false
             }
         }
         if (tableView == layersTable) {
             let row = layersTable.selectedRow
             if (row >= 0) {
-                deleteDeepLayerButton.enabled = true
-                addChannelButton.enabled = true
+                deleteDeepLayerButton.isEnabled = true
+                addChannelButton.isEnabled = true
             }
             else {
-                deleteDeepLayerButton.enabled = false
-                addChannelButton.enabled = false
-                deleteChannelButton.enabled = false
-                addOperatorButton.enabled = false
-                networkOperatorTypePopUp.enabled = false
-                editOperatorButton.enabled = false
-                deleteOperatorButton.enabled = false
+                deleteDeepLayerButton.isEnabled = false
+                addChannelButton.isEnabled = false
+                deleteChannelButton.isEnabled = false
+                addOperatorButton.isEnabled = false
+                networkOperatorTypePopUp.isEnabled = false
+                editOperatorButton.isEnabled = false
+                deleteOperatorButton.isEnabled = false
             }
             channelTable.reloadData()
             operationsTable.reloadData()
@@ -826,28 +974,28 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         else if (tableView == channelTable) {
             let row = channelTable.selectedRow
             if (row >= 0) {
-                deleteChannelButton.enabled = true
-                addOperatorButton.enabled = true
-                networkOperatorTypePopUp.enabled = true
+                deleteChannelButton.isEnabled = true
+                addOperatorButton.isEnabled = true
+                networkOperatorTypePopUp.isEnabled = true
             }
             else {
-                deleteChannelButton.enabled = false
-                addOperatorButton.enabled = false
-                networkOperatorTypePopUp.enabled = false
-                editOperatorButton.enabled = false
-                deleteOperatorButton.enabled = false
+                deleteChannelButton.isEnabled = false
+                addOperatorButton.isEnabled = false
+                networkOperatorTypePopUp.isEnabled = false
+                editOperatorButton.isEnabled = false
+                deleteOperatorButton.isEnabled = false
             }
             operationsTable.reloadData()
         }
         else if (tableView == operationsTable) {
             let row = operationsTable.selectedRow
             if (row >= 0) {
-                editOperatorButton.enabled = true
-                deleteOperatorButton.enabled = true
+                editOperatorButton.isEnabled = true
+                deleteOperatorButton.isEnabled = true
             }
             else {
-                editOperatorButton.enabled = false
-                deleteOperatorButton.enabled = false
+                editOperatorButton.isEnabled = false
+                deleteOperatorButton.isEnabled = false
             }
         }
         
@@ -856,41 +1004,44 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     }
     
     //  Save/Load functions
-    enum ConvolutionWriteErrors: ErrorType { case failedWriting }
-    func saveToFile(path: String) throws
+    enum ConvolutionWriteErrors: Error { case failedWriting }
+    func saveToFile(_ path: String) throws
     {
         //  Create a property list of the model
         var modelDictionary = [String: AnyObject]()
         
         //  Add the image scaling size
-        modelDictionary["size"] = imageScaledSize
+        modelDictionary["size"] = imageScaledSize as AnyObject?
+        
+        //  Add the test image generator settings
+        modelDictionary["trainGeneratorSettings"] = trainingImageGenerator.getPersistenceDictionary() as AnyObject?
         
         //  Add the input sources
         var inputArray : [[String: AnyObject]] = []
         for input in inputDataTypes {
             var inputDictionary = [String: AnyObject]()
-            inputDictionary["id"] = input.0
-            inputDictionary["imageData"] = input.1.rawValue
+            inputDictionary["id"] = input.0 as AnyObject?
+            inputDictionary["imageData"] = input.1.rawValue as AnyObject?
             inputArray.append(inputDictionary)
         }
-        modelDictionary["inputs"] = inputArray
+        modelDictionary["inputs"] = inputArray as AnyObject?
         
         //  Add the deep network
-        modelDictionary["network"] = deepNetwork.getPersistenceDictionary()
+        modelDictionary["network"] = deepNetwork.getPersistenceDictionary() as AnyObject?
         
         //  Add the training parameters
-        modelDictionary["trainingRate"] = trainingRate
-        modelDictionary["weightDecay"] = weightDecay
-        modelDictionary["batchSize"] = batchSize
-        modelDictionary["numEpochs"] = numEpochs
+        modelDictionary["trainingRate"] = trainingRate as AnyObject?
+        modelDictionary["weightDecay"] = weightDecay as AnyObject?
+        modelDictionary["batchSize"] = batchSize as AnyObject?
+        modelDictionary["numEpochs"] = numEpochs as AnyObject?
        
         //  Convert to a property list (NSDictionary) and write
         let pList = NSDictionary(dictionary: modelDictionary)
-        if !pList.writeToFile(path, atomically: false) { throw ConvolutionWriteErrors.failedWriting }
+        if !pList.write(toFile: path, atomically: false) { throw ConvolutionWriteErrors.failedWriting }
     }
     
-    enum ConvolutionReadErrors: ErrorType { case fileNotFoundOrNotPList; case badFormat }
-    func loadFile(path: String) throws
+    enum ConvolutionReadErrors: Error { case fileNotFoundOrNotPList; case badFormat }
+    func loadFile(_ path: String) throws
     {
         //  Read the property list
         let pList = NSDictionary(contentsOfFile: path)
@@ -901,15 +1052,24 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         let sizeValue = dictionary["size"] as? NSInteger
         if sizeValue == nil { throw ConvolutionReadErrors.badFormat }
         imageScaledSize = sizeValue!
-        imageScale.selectItemWithTag(imageScaledSize)
+        imageScale.selectItem(withTag: imageScaledSize)
+        
+        //  Read the test image generator settings
+        let trainingImageGeneratorDict = dictionary["trainGeneratorSettings"] as? [String: AnyObject]
+        if trainingImageGeneratorDict == nil { throw ConvolutionReadErrors.badFormat }
+        let tempGen = LabeledImageGenerator(fromDictionary: trainingImageGeneratorDict!)
+        if tempGen == nil { throw ConvolutionReadErrors.badFormat }
+        trainingImageGenerator = tempGen!
         
         //  Get the input sources
         inputDataTypes = [:]
         let inputArray = dictionary["inputs"] as! NSArray
-        for inputDict in inputArray {
-            let idValue = inputDict["id"] as? NSString
+        for input in inputArray {
+            let inputDict = input as? [String : AnyObject]
+            if inputDict == nil { throw ConvolutionReadErrors.badFormat }
+            let idValue = inputDict!["id"] as? NSString
             if idValue == nil { throw ConvolutionReadErrors.badFormat }
-            let dataSourceValue = inputDict["imageData"] as? NSInteger
+            let dataSourceValue = inputDict!["imageData"] as? NSInteger
             if dataSourceValue == nil { throw ConvolutionReadErrors.badFormat }
             let dataSource = ImageDataSource(rawValue: dataSourceValue!)
             inputDataTypes[idValue! as String] = dataSource
@@ -954,13 +1114,13 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         numEpochsTextField.integerValue = numEpochs
     }
     
-    @IBAction func saveDocument(sender: AnyObject) {
+    @IBAction func saveDocument(_ sender: AnyObject) {
         let saveDialog = NSSavePanel();
         saveDialog.title = "Select path for model save"
-        saveDialog.beginWithCompletionHandler() { (result: Int) -> Void in
+        saveDialog.begin() { (result: Int) -> Void in
             if result == NSFileHandlingPanelOKButton {
                 do {
-                    try self.saveToFile(saveDialog.URL!.path!)
+                    try self.saveToFile(saveDialog.url!.path)
                 }
                 catch {
                     self.warningAlert("Unable to save model", information: "Error writing file")
@@ -969,13 +1129,13 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         }
     }
     
-    @IBAction func openDocument(sender: AnyObject) {
+    @IBAction func openDocument(_ sender: AnyObject) {
         let openPanel = NSOpenPanel()
         openPanel.title = "Choose a model file"
-        openPanel.beginWithCompletionHandler(){(result:Int) -> Void in
+        openPanel.begin(){(result:Int) -> Void in
             if (result == NSFileHandlingPanelOKButton) {
                 do {
-                    try self.loadFile(openPanel.URL!.path!)
+                    try self.loadFile(openPanel.url!.path)
                 }
                 catch {
                     self.warningAlert("Unable to load selected file", information: "File Load Error")
@@ -984,12 +1144,21 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         }
     }
     
-    func warningAlert(message: String, information: String) {
+    func warningAlert(_ message: String, information: String) {
         let myPopup: NSAlert = NSAlert()
         myPopup.messageText = message
         myPopup.informativeText = information
-        myPopup.alertStyle = NSAlertStyle.WarningAlertStyle
-        myPopup.addButtonWithTitle("OK")
+        myPopup.alertStyle = NSAlertStyle.warning
+        myPopup.addButton(withTitle: "OK")
+        myPopup.runModal()
+    }
+    
+    func infoAlert(_ message: String, information: String) {
+        let myPopup: NSAlert = NSAlert()
+        myPopup.messageText = message
+        myPopup.informativeText = information
+        myPopup.alertStyle = NSAlertStyle.informational
+        myPopup.addButton(withTitle: "OK")
         myPopup.runModal()
     }
 

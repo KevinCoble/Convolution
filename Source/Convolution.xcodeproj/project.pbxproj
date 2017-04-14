@@ -7,26 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0E04165A1D208CF200B84717 /* DeepNetworkOperator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0416591D208CF200B84717 /* DeepNetworkOperator.swift */; };
 		0E06414C1D236F2E00B31109 /* DeepNetworkImageExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E06414B1D236F2E00B31109 /* DeepNetworkImageExtension.swift */; };
-		0E06414E1D27500600B31109 /* DeepNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E06414D1D27500600B31109 /* DeepNeuralNetwork.swift */; };
-		0E0641501D29E53500B31109 /* MLPersistenceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E06414F1D29E53500B31109 /* MLPersistenceProtocol.swift */; };
 		0E333C581C6FEDC300D40FEB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E333C571C6FEDC300D40FEB /* AppDelegate.swift */; };
 		0E333C5A1C6FEDC300D40FEB /* NetworkViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E333C591C6FEDC300D40FEB /* NetworkViewController.swift */; };
 		0E333C5C1C6FEDC300D40FEB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0E333C5B1C6FEDC300D40FEB /* Assets.xcassets */; };
 		0E333C5F1C6FEDC300D40FEB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0E333C5D1C6FEDC300D40FEB /* Main.storyboard */; };
 		0E333C6A1C6FEDC300D40FEB /* ConvolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E333C691C6FEDC300D40FEB /* ConvolutionTests.swift */; };
 		0E333C751C6FEDC300D40FEB /* ConvolutionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E333C741C6FEDC300D40FEB /* ConvolutionUITests.swift */; };
-		0E333C831C703E2100D40FEB /* Convolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E333C821C703E2100D40FEB /* Convolution.swift */; };
-		0E4CE81E1D1F071600C05284 /* DeepNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4CE81D1D1F071600C05284 /* DeepNetwork.swift */; };
-		0E4CE8201D1F076A00C05284 /* DeepLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4CE81F1D1F076A00C05284 /* DeepLayer.swift */; };
-		0E4CE8221D1F07F000C05284 /* DeepChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4CE8211D1F07F000C05284 /* DeepChannel.swift */; };
+		0E48AD8A1D90F08F00AA5C50 /* LabeledImageGeneratorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E48AD891D90F08F00AA5C50 /* LabeledImageGeneratorViewController.swift */; };
 		0E4CE8241D1F75BE00C05284 /* ChannelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4CE8231D1F75BE00C05284 /* ChannelViewController.swift */; };
 		0E8CDA311D1F9A5800826E8C /* InputViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CDA301D1F9A5800826E8C /* InputViewController.swift */; };
 		0E9F9BE91C8D34E10037071D /* LabeledImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9BE81C8D34E10037071D /* LabeledImage.swift */; };
+		0EA301041DB2C13F009CB319 /* AIToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EA301031DB2C13F009CB319 /* AIToolbox.framework */; };
 		0EED6CAB1C724163008DC9DE /* ImageData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EED6CAA1C724163008DC9DE /* ImageData.swift */; };
 		0EED6CAD1C73F31C008DC9DE /* ConvolutionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EED6CAC1C73F31C008DC9DE /* ConvolutionViewController.swift */; };
-		0EED6CAF1C793671008DC9DE /* Pooling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EED6CAE1C793671008DC9DE /* Pooling.swift */; };
 		0EED6CB11C7A1CB9008DC9DE /* PoolingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EED6CB01C7A1CB9008DC9DE /* PoolingViewController.swift */; };
 		0EED6CB51C7AB895008DC9DE /* DeepNeuralNetworkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EED6CB41C7AB895008DC9DE /* DeepNeuralNetworkController.swift */; };
 /* End PBXBuildFile section */
@@ -49,10 +43,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0E0416591D208CF200B84717 /* DeepNetworkOperator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeepNetworkOperator.swift; sourceTree = "<group>"; };
 		0E06414B1D236F2E00B31109 /* DeepNetworkImageExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeepNetworkImageExtension.swift; sourceTree = "<group>"; };
-		0E06414D1D27500600B31109 /* DeepNeuralNetwork.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeepNeuralNetwork.swift; sourceTree = "<group>"; };
-		0E06414F1D29E53500B31109 /* MLPersistenceProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MLPersistenceProtocol.swift; sourceTree = "<group>"; };
 		0E333C541C6FEDC300D40FEB /* Convolution.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Convolution.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E333C571C6FEDC300D40FEB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0E333C591C6FEDC300D40FEB /* NetworkViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkViewController.swift; sourceTree = "<group>"; };
@@ -65,16 +56,14 @@
 		0E333C701C6FEDC300D40FEB /* ConvolutionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ConvolutionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E333C741C6FEDC300D40FEB /* ConvolutionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvolutionUITests.swift; sourceTree = "<group>"; };
 		0E333C761C6FEDC300D40FEB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		0E333C821C703E2100D40FEB /* Convolution.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Convolution.swift; sourceTree = "<group>"; };
-		0E4CE81D1D1F071600C05284 /* DeepNetwork.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeepNetwork.swift; sourceTree = "<group>"; };
-		0E4CE81F1D1F076A00C05284 /* DeepLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeepLayer.swift; sourceTree = "<group>"; };
-		0E4CE8211D1F07F000C05284 /* DeepChannel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeepChannel.swift; sourceTree = "<group>"; };
+		0E48AD891D90F08F00AA5C50 /* LabeledImageGeneratorViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LabeledImageGeneratorViewController.swift; sourceTree = "<group>"; };
 		0E4CE8231D1F75BE00C05284 /* ChannelViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelViewController.swift; sourceTree = "<group>"; };
 		0E8CDA301D1F9A5800826E8C /* InputViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputViewController.swift; sourceTree = "<group>"; };
 		0E9F9BE81C8D34E10037071D /* LabeledImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LabeledImage.swift; sourceTree = "<group>"; };
+		0EA301011DB2BBD1009CB319 /* AIToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AIToolbox.framework; path = ../Frameworks/AIToolbox.framework; sourceTree = "<group>"; };
+		0EA301031DB2C13F009CB319 /* AIToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AIToolbox.framework; path = ../../../../Library/Frameworks/AIToolbox.framework; sourceTree = "<group>"; };
 		0EED6CAA1C724163008DC9DE /* ImageData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageData.swift; sourceTree = "<group>"; };
 		0EED6CAC1C73F31C008DC9DE /* ConvolutionViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConvolutionViewController.swift; sourceTree = "<group>"; };
-		0EED6CAE1C793671008DC9DE /* Pooling.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Pooling.swift; sourceTree = "<group>"; };
 		0EED6CB01C7A1CB9008DC9DE /* PoolingViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PoolingViewController.swift; sourceTree = "<group>"; };
 		0EED6CB41C7AB895008DC9DE /* DeepNeuralNetworkController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeepNeuralNetworkController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -84,6 +73,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0EA301041DB2C13F009CB319 /* AIToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -111,6 +101,7 @@
 				0E333C681C6FEDC300D40FEB /* ConvolutionTests */,
 				0E333C731C6FEDC300D40FEB /* ConvolutionUITests */,
 				0E333C551C6FEDC300D40FEB /* Products */,
+				0EA301001DB2BBD0009CB319 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -134,20 +125,13 @@
 				0EED6CAC1C73F31C008DC9DE /* ConvolutionViewController.swift */,
 				0EED6CB01C7A1CB9008DC9DE /* PoolingViewController.swift */,
 				0EED6CB41C7AB895008DC9DE /* DeepNeuralNetworkController.swift */,
+				0E48AD891D90F08F00AA5C50 /* LabeledImageGeneratorViewController.swift */,
 				0E333C5B1C6FEDC300D40FEB /* Assets.xcassets */,
 				0E333C5D1C6FEDC300D40FEB /* Main.storyboard */,
 				0E333C601C6FEDC300D40FEB /* Info.plist */,
 				0EED6CAA1C724163008DC9DE /* ImageData.swift */,
 				0E9F9BE81C8D34E10037071D /* LabeledImage.swift */,
 				0E06414B1D236F2E00B31109 /* DeepNetworkImageExtension.swift */,
-				0E333C821C703E2100D40FEB /* Convolution.swift */,
-				0EED6CAE1C793671008DC9DE /* Pooling.swift */,
-				0E06414D1D27500600B31109 /* DeepNeuralNetwork.swift */,
-				0E4CE81D1D1F071600C05284 /* DeepNetwork.swift */,
-				0E4CE81F1D1F076A00C05284 /* DeepLayer.swift */,
-				0E4CE8211D1F07F000C05284 /* DeepChannel.swift */,
-				0E0416591D208CF200B84717 /* DeepNetworkOperator.swift */,
-				0E06414F1D29E53500B31109 /* MLPersistenceProtocol.swift */,
 			);
 			path = Convolution;
 			sourceTree = "<group>";
@@ -168,6 +152,15 @@
 				0E333C761C6FEDC300D40FEB /* Info.plist */,
 			);
 			path = ConvolutionUITests;
+			sourceTree = "<group>";
+		};
+		0EA301001DB2BBD0009CB319 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0EA301031DB2C13F009CB319 /* AIToolbox.framework */,
+				0EA301011DB2BBD1009CB319 /* AIToolbox.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -233,18 +226,21 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0720;
-				LastUpgradeCheck = 0720;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = "Kevin Coble";
 				TargetAttributes = {
 					0E333C531C6FEDC300D40FEB = {
 						CreatedOnToolsVersion = 7.2.1;
+						LastSwiftMigration = 0800;
 					};
 					0E333C641C6FEDC300D40FEB = {
 						CreatedOnToolsVersion = 7.2.1;
+						LastSwiftMigration = 0800;
 						TestTargetID = 0E333C531C6FEDC300D40FEB;
 					};
 					0E333C6F1C6FEDC300D40FEB = {
 						CreatedOnToolsVersion = 7.2.1;
+						LastSwiftMigration = 0800;
 						TestTargetID = 0E333C531C6FEDC300D40FEB;
 					};
 				};
@@ -300,22 +296,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0E06414E1D27500600B31109 /* DeepNeuralNetwork.swift in Sources */,
 				0E333C5A1C6FEDC300D40FEB /* NetworkViewController.swift in Sources */,
 				0E9F9BE91C8D34E10037071D /* LabeledImage.swift in Sources */,
-				0E4CE8201D1F076A00C05284 /* DeepLayer.swift in Sources */,
 				0E8CDA311D1F9A5800826E8C /* InputViewController.swift in Sources */,
 				0E06414C1D236F2E00B31109 /* DeepNetworkImageExtension.swift in Sources */,
-				0E0641501D29E53500B31109 /* MLPersistenceProtocol.swift in Sources */,
-				0E4CE8221D1F07F000C05284 /* DeepChannel.swift in Sources */,
+				0E48AD8A1D90F08F00AA5C50 /* LabeledImageGeneratorViewController.swift in Sources */,
 				0E4CE8241D1F75BE00C05284 /* ChannelViewController.swift in Sources */,
 				0EED6CB11C7A1CB9008DC9DE /* PoolingViewController.swift in Sources */,
 				0EED6CB51C7AB895008DC9DE /* DeepNeuralNetworkController.swift in Sources */,
 				0E333C581C6FEDC300D40FEB /* AppDelegate.swift in Sources */,
-				0EED6CAF1C793671008DC9DE /* Pooling.swift in Sources */,
-				0E333C831C703E2100D40FEB /* Convolution.swift in Sources */,
-				0E4CE81E1D1F071600C05284 /* DeepNetwork.swift in Sources */,
-				0E04165A1D208CF200B84717 /* DeepNetworkOperator.swift in Sources */,
 				0EED6CAD1C73F31C008DC9DE /* ConvolutionViewController.swift in Sources */,
 				0EED6CAB1C724163008DC9DE /* ImageData.swift in Sources */,
 			);
@@ -377,8 +366,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -421,8 +412,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -441,6 +434,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};
 			name = Release;
 		};
@@ -449,10 +443,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				INFOPLIST_FILE = Convolution/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.Convolution;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -461,10 +460,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				INFOPLIST_FILE = Convolution/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.Convolution;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -477,6 +481,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.ConvolutionTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Convolution.app/Contents/MacOS/Convolution";
 			};
 			name = Debug;
@@ -490,6 +495,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.ConvolutionTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Convolution.app/Contents/MacOS/Convolution";
 			};
 			name = Release;
@@ -503,6 +509,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.ConvolutionUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
 				TEST_TARGET_NAME = Convolution;
 				USES_XCTRUNNER = YES;
 			};
@@ -517,6 +524,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.ConvolutionUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
 				TEST_TARGET_NAME = Convolution;
 				USES_XCTRUNNER = YES;
 			};

@@ -22,20 +22,20 @@ class PoolingViewController: NSViewController {
         super.viewDidLoad()
         
         //  Initialize the values
-        operationSelection.selectItemWithTag(initialOperation)
-        reductionSelection.selectItemWithTag(initialReduction)
+        operationSelection.selectItem(withTag: initialOperation)
+        reductionSelection.selectItem(withTag: initialReduction)
     }
     
-    @IBAction func onCancel(sender: NSButton) {
-        presentingViewController?.dismissViewController(self)
+    @IBAction func onCancel(_ sender: NSButton) {
+        presenting?.dismissViewController(self)
     }
     
-    @IBAction func onOK(sender: NSButton) {
+    @IBAction func onOK(_ sender: NSButton) {
         //  Pass results back to the invoking controller
-        let networkVC = presentingViewController as! NetworkViewController
+        let networkVC = presenting as! NetworkViewController
         networkVC.poolingEditComplete(operationSelection.selectedTag(),
                             reduction: reductionSelection.selectedTag())
         
-        presentingViewController?.dismissViewController(self)
+        presenting?.dismissViewController(self)
     }
 }

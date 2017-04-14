@@ -18,15 +18,15 @@ class ChannelViewController: NSViewController {
         // Do view setup here.
     }
     
-    @IBAction func onCancel(sender: NSButton) {
-        presentingViewController?.dismissViewController(self)
+    @IBAction func onCancel(_ sender: NSButton) {
+        presenting?.dismissViewController(self)
     }
     
-    @IBAction func onOK(sender: NSButton) {
+    @IBAction func onOK(_ sender: NSButton) {
         //  Pass results back to the invoking controller
-        let networkVC = presentingViewController as! NetworkViewController
+        let networkVC = presenting as! NetworkViewController
         networkVC.channelEditComplete(channelID: channelIDTextField.stringValue, inputSourceID: inputSourceIDTextField.stringValue)
         
-        presentingViewController?.dismissViewController(self)
+        presenting?.dismissViewController(self)
     }
 }

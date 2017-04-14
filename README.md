@@ -5,7 +5,7 @@ This is an interface to attempt to learn classification labels for images using 
 
 I will add some instructions on how to use it here over the next few days
 
-Still a few missing options, but it learns the first batch - recognizing horizontal line images!
+Still a few missing options, but it learns the first and second batches - recognizing horizontal line images and differentiating circles from lines!
 
 
 ##  Concepts
@@ -15,7 +15,7 @@ Still a few missing options, but it learns the first batch - recognizing horizon
 
 ##### Layer
 - A single layer of the deep network.  Each layer is processed sequentially, as the inputs from the previous layer must be available to feed into the next layer.  Each layer can only reference the outputs from the previous layer (or the initial inputs by the first layer).
-- A layer contains one or more channels.  All channel are processed concurrently, speeding up operation of the network.
+- A layer contains one or more channels.  All channel are processed concurrently, speeding up operation of the network.  The last layer should only have one channel, as it should be providing the output for the deep network.
 
 ##### Channel
 - A set of operations that can be performed individually.  A channel is tagged, so that it's output can be referenced by channels in the next layer.  A channel has a source tag, defining the source of input data from the previous layer (or the network input set if the channel is in the first layer).
@@ -36,16 +36,34 @@ Still a few missing options, but it learns the first batch - recognizing horizon
 
 ##  Network Operators
 #### Convolution2D
+##### Operation Definition
+A Convolution2D operator requires a two-dimensional data array as input.  The operator processes each image pixel by multiplying each pixel value of the input data, and its' neighboring values by a small 2-dimensional matrix and summing the results.  For example, a 3x3 matrix convolution will multiply the pixel value by the center value of the convolution matrix, add the image value to the upper-left of the target pixel multiplied by the upper-left convolution matrix value, add the image value above the target pixel multiplied by the top-center matrix value, etc.  The resulting data is a 2-dimensional array of the same size as the image data.
+
 ##### Network Operator Table Information
 A Convolution2D operator appears in the Network Operator table with a type of "2D Convolution" and details giving the convolution matrix type and the values of the matrix in a single-dimensional array.
 
+##### Definition/Editing Sheet
+Convolution2D operators have a Convolution2D sheet for definition and editing.  See the section for this sheet for more information.
+
 #### Pooling
+##### Operation Definition
+A Pooling operator can process any data size.  The operator 'pools' the data from a rectangular volume down to a single 'pixel'.  The reduction size is specified as part of the operator, with each dimension of the input data being reduced by a specified amount.  The data in the cell is aggregated using a selectable function, either an average, minimum, or maximum of the data in the cell.
+
 ##### Network Operator Table Information
 A Pooling operator appears in the Network Operator table with a type of "Pooling" and details giving the pooling type (average, minimum, or maximum), and the reduction factor for each dimension.
 
+##### Definition/Editing Sheet
+Pooling operators have a Pooling sheet for definition and editing.  See the section for this sheet for more information.
+
 #### FeedForwardNN
+##### Operation Definition
+A Feed-Forward Neural Network operator can process any data size, but treats it as a single linear vector.  The operator multiplies each input value by a learnable weight value and sums the results.  This summation is then processed through a selectable activation function, effectively 'squashing' the summation to a managable value range.  This is done for a definable number of neural network nodes in the operator.  The nodes can be specified to be treated as a set of a specified dimension and size.  The output is presented as a vector, array, volume, or 4-dimensional solid of dimensions matching the node sizing for the operator.
+
 ##### Network Operator Table Information
 A Neural Network operator appears in the Network Operator table with a type of "FeedForward NN" and details giving the activation function for the network and the resulting data size (based on the number of nodes in the network).
+
+##### Definition/Editing Sheet
+FeedForware Neural Network operators have a Neural Network sheet for definition and editing.  See the section for this sheet for more information.
 
 
 ##  Menu commands
@@ -57,6 +75,12 @@ A Neural Network operator appears in the Network Operator table with a type of "
 
 ##### File->Save
 - Saves a network model, training parameters, and input definitions to a file.  The file is a standard plist file (a subset of XML), so it can be examined and possibly modified.
+
+##### Network->Initialize
+- All trainable parameters in the model are re-initialized to random values.
+- 
+##### Network->Gradient Check
+- A numeric check of the gradient calculations within the network is performed.  A success or failure message is displayed.
 
 ##  Main Window
 #### Scale Image to Size
@@ -119,7 +143,7 @@ A Neural Network operator appears in the Network Operator table with a type of "
 - The operator list shows all the defined operators for the selected channel of the selected layer of the deep network.  Each operator is shown with the type of operator and a detail string.  For more information on operators, see the Network Operators section of this manual.  Selecting an operator in the list may affect the image shown in the data image section (see that section for more information).
 
 ##### Add Button
-- The 'Add' button underneath the operator list activates the appropriate sheet for defining a new operator for the selected channel.  The type of sheet opened is set by the operator type selection to the right of the Add button.  See the section for the approprate sheed for use information.  The order of operators in the list determines the order that the operations are performed when the channel is processed.
+- The 'Add' button underneath the operator list activates the appropriate sheet for defining a new operator for the selected channel.  The type of sheet opened is set by the operator type selection to the right of the Add button.  See the section for the approprate sheet for use information.  The order of operators in the list determines the order that the operations are performed when the channel is processed.
 
 ##### Operator Type Selection
 - This drop-down list contains all of the currently defined operators that can be added to a channel in a deep network.  See the Network Operators section of this manual for information on the currently known types.
@@ -129,6 +153,30 @@ A Neural Network operator appears in the Network Operator table with a type of "
 
 ##### Delete Button
 - The 'Delete' button underneath the operator list removes the operator that is currently selected from the channel.
+
+
+#### Neural Network Output
+##### Output List
+- The output list shows the output of the last operator of the last channel of the last layer in the deep network.  This output is used to determine the output class computed by the network.
+
+##### Resulting Class
+- This text field shows the resulting class calculated by the deep neural network for the current test/training image.  This class is extracted from the outputs of the last operator of the last channel of the last layer.  If the operator has only one floating value output, that value is compared against the middle of the expected output range for the operator, and if above that value a class of 1 is given, else a class of 0 is the result.  If the operator has more than one output value, the class is given as the index of the output with the highest value.
+
+
+#### Topology Error
+- This text field shows the status of the deep network configuration, listing any errors in the definition that must be corrected before the network can be trained or used.  The following strings may be seen in the field:
+    * Valid Network - indicates the network is correctly configured, and may be used.
+    * Empty Network - indicates the network has no layers to verify.
+    * Layer <index>, channel <ID> uses input <sourceID>, which does not exist - the layer at the given index has a channel with the specified ID string that uses data tagged with the specified source ID tag, and that tag does not exist in the previous layer, or in the input sets if the layer index is 0.
+
+
+#### Data Image
+- This image view shows the selected data, either the train/test image, one of the image data sets as a greyscale pseudo-image, or the output of a selected operator (in the Network Operators list) as a greyscale pseudo-image.
+##### Image Source
+- The image source section provides a set of three radio buttons and a drop-down selection list to use in specifying the image shown in the image view.
+    * Test Image - if selected, the testing or training image is shown in the image view, in full color.
+    * Image Data - if selected, the image data of the type selected in the drop-down list to the right of the radio button is extracted from testing or training image, and then presented in the image view as a grayscale image at the same resolution as the source image.
+    * Selected Item Output - if selected, the output of the selected network operator is shown as grayscale image of a resolution matching the output of the network operator.  If no operator is selected, or if the operator does not have a 2-dimensional output, the image view will show 'No Image'.
 
 
 ##  Input Sheet
@@ -155,6 +203,22 @@ The channel sheet is used to add or modify an channel definition.  The following
 - This text entry field takes the string identifier for the input source from the previous layer, which is either a channel identifier for the channel in that layer, or an input set if the current channel is in the first layer.  The ID must match an input source for the network to be considered valid.
 
 
+##  2D Convolution Sheet
+The 2D convolution sheet is used to add or modify a convolution operation.  The following sections describe the entries in the sheet
+#### 2D Convolution Type
+- This drop-down list selects the type of 2-dimensional convolution that will be performed, both the size of the convolution matrix, and the (initial) entries of the matrix itself.  Changing the type will initialize the matrix entries on the sheet to the values expected for the selected matrix.  See the section on 2D Convolution Matrix Types for information on the selections available.
+
+#### Convolution Matrix
+- This set of entries define the initial values of the convolution matrix.  The matrix array will only have enterable fields in the size specified by the convolution type, centered in the sheet.  Changing any of the values will convert the matrix type to a 'custom' matrix of the current size.
+
+
+##  2D Convolution Matrix Types
+1. Vertical Edge 3x3 - A vertical gradient Sobel type filter
+2. Horizontal Edge 3x3 - A horizontal gradient Sobel type filter
+3. Custom 3x3 - A user-supplied 3x3 matrix
+4. Learnable 3x3 - A 3x3 matrix that has values that will be learned from the error gradient
+
+
 ##  Experiments
 1. Horizontal lines - learns to discriminate between horizontal and vertical lines
     - File->Open the Test1_Horizontal file.  This is a simple network with one channel.  A convolution of horizontal gradient, pooling down to 16 squares using maximum, and a single node neural net
@@ -163,9 +227,18 @@ The channel sheet is used to add or modify an channel definition.  The following
     - Click 'Train'
     - The network should fairly quickly learn the horizontal lines, getting a 100% test rate in under a minute.
     
+2. Circles and Lines - learns to discriminate between horizontal lines and circles using a trainable convolution operator
+    - File->Open the Test2_Circle file.  This is a simple network with one channel.  A trainable convolution operator, pooling down to 16 squares using average, and a single node neural net
+    - Select the Use Generated Images checkbox for testing
+    - Leave repeat training and Auto testing on.
+    - Click 'Train'
+    - The network should medium quickly learn the differences, getting a about 95% test rate in about 5 minutes.
+    
 
 
 
 ## License
 
 This program is made available with the [Apache license](LICENSE.md).
+
+

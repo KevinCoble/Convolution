@@ -18,16 +18,16 @@ class InputViewController: NSViewController {
         // Do view setup here.
     }
     
-    @IBAction func onCancel(sender: NSButton) {
-        presentingViewController?.dismissViewController(self)
+    @IBAction func onCancel(_ sender: NSButton) {
+        presenting?.dismissViewController(self)
     }
     
-    @IBAction func onOK(sender: NSButton) {
+    @IBAction func onOK(_ sender: NSButton) {
         //  Pass results back to the invoking controller
-        let networkVC = presentingViewController as! NetworkViewController
+        let networkVC = presenting as! NetworkViewController
         networkVC.inputEditComplete(inputID: inputIdentifierTextField.stringValue, dataType: ImageDataSource(rawValue: dataTypePopUp.selectedTag()))
         
-        presentingViewController?.dismissViewController(self)
+        presenting?.dismissViewController(self)
     }
     
 }

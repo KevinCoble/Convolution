@@ -16,7 +16,7 @@ public protocol MLPersistence {
 
 extension MLPersistence {
     //  Get an integer array from a source dictionary
-    public func getIntArray(sourceDictionary: [String: AnyObject], identifier: String) -> [Int]?
+    public func getIntArray(_ sourceDictionary: [String: AnyObject], identifier: String) -> [Int]?
     {
         let nsArray = sourceDictionary[identifier] as? NSArray
         if (nsArray == nil)  { return nil }
@@ -30,7 +30,7 @@ extension MLPersistence {
     }
     
     //  Get an float array from a source dictionary
-    public func getFloatArray(sourceDictionary: [String: AnyObject], identifier: String) -> [Float]?
+    public func getFloatArray(_ sourceDictionary: [String: AnyObject], identifier: String) -> [Float]?
     {
         let nsArray = sourceDictionary[identifier] as? NSArray
         if (nsArray == nil)  { return nil }
@@ -44,7 +44,7 @@ extension MLPersistence {
     }
     
     //  Get an double array from a source dictionary
-    public func getDoubleArray(sourceDictionary: [String: AnyObject], identifier: String) -> [Double]?
+    public func getDoubleArray(_ sourceDictionary: [String: AnyObject], identifier: String) -> [Double]?
     {
         let nsArray = sourceDictionary[identifier] as? NSArray
         if (nsArray == nil)  { return nil }

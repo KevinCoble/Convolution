@@ -8,7 +8,7 @@
 
 import Cocoa
 
-public struct ImageDataSource : OptionSetType
+public struct ImageDataSource : OptionSet
 {
     public let rawValue : Int
     public init(rawValue:Int){ self.rawValue = rawValue}
@@ -46,13 +46,13 @@ public struct ImageDataSource : OptionSetType
     }
 }
 
-public class ImageData
+open class ImageData
 {
     let originalImage : NSImage
     var currentSize : Int
     var neededData: ImageDataSource
     
-    public var scaledBitmap: NSBitmapImageRep?
+    open var scaledBitmap: NSBitmapImageRep?
     
     //  Data arrays
     var redData : [Float]?
@@ -71,7 +71,7 @@ public class ImageData
         setImageSize(size)  //  This will get the initial data
     }
     
-    public func setImageSize(size: Int)
+    open func setImageSize(_ size: Int)
     {
         //  Get the bitmap representation
         currentSize = size
@@ -79,10 +79,10 @@ public class ImageData
         if let representation = scaledBitmap {
             if let context = NSGraphicsContext(bitmapImageRep: representation) {
                 NSGraphicsContext.saveGraphicsState()
-                NSGraphicsContext.setCurrentContext(context)
-                context.imageInterpolation = .High
+                NSGraphicsContext.setCurrent(context)
+                context.imageInterpolation = .high
                 let scale = CGFloat(currentSize)
-                originalImage.drawInRect(CGRectMake(0, 0, scale, scale), fromRect: CGRect(origin: NSZeroPoint, size: originalImage.size), operation: .CompositeCopy, fraction: 1.0 )
+                originalImage.draw(in: CGRect(x: 0, y: 0, width: scale, height: scale), from: CGRect(origin: NSZeroPoint, size: originalImage.size), operation: .copy, fraction: 1.0 )
                 context.flushGraphics()
                 NSGraphicsContext.restoreGraphicsState()
             }
@@ -92,7 +92,7 @@ public class ImageData
         getData()
     }
     
-    public func setRequiredSources(sources: ImageDataSource)
+    open func setRequiredSources(_ sources: ImageDataSource)
     {
         neededData = sources
         getData()
@@ -111,25 +111,25 @@ public class ImageData
     func getData()
     {
         //  Start with empty arrays
-        redData = neededData.contains(.Red) ? [Float](count: currentSize * currentSize, repeatedValue: 0.0) : nil
-        greenData = neededData.contains(.Green) ? [Float](count: currentSize * currentSize, repeatedValue: 0.0) : nil
-        blueData = neededData.contains(.Blue) ? [Float](count: currentSize * currentSize, repeatedValue: 0.0) : nil
-        averageData = neededData.contains(.Average) ? [Float](count: currentSize * currentSize, repeatedValue: 0.0) : nil
-        minimumData = neededData.contains(.Minimum) ? [Float](count: currentSize * currentSize, repeatedValue: 0.0) : nil
-        maximumData = neededData.contains(.Maximum) ? [Float](count: currentSize * currentSize, repeatedValue: 0.0) : nil
+        redData = neededData.contains(.Red) ? [Float](repeating: 0.0, count: currentSize * currentSize) : nil
+        greenData = neededData.contains(.Green) ? [Float](repeating: 0.0, count: currentSize * currentSize) : nil
+        blueData = neededData.contains(.Blue) ? [Float](repeating: 0.0, count: currentSize * currentSize) : nil
+        averageData = neededData.contains(.Average) ? [Float](repeating: 0.0, count: currentSize * currentSize) : nil
+        minimumData = neededData.contains(.Minimum) ? [Float](repeating: 0.0, count: currentSize * currentSize) : nil
+        maximumData = neededData.contains(.Maximum) ? [Float](repeating: 0.0, count: currentSize * currentSize) : nil
         
         //  Get the data from the bitmap
         if let representation = scaledBitmap {
             //  Get pointers to each plane of data
-            var redPtr = representation.bitmapData
+            var redPtr = representation.bitmapData!
             var greenPtr = redPtr + 1
             var bluePtr = greenPtr + 1
             
             let inverse255 : Float = 1.0 / 255.0
             for pixel in 0..<(currentSize * currentSize) {
-                let redValue = Float(redPtr.memory) * inverse255
-                let greenValue = Float(greenPtr.memory) * inverse255
-                let blueValue = Float(bluePtr.memory) * inverse255
+                let redValue = Float(redPtr.pointee) * inverse255
+                let greenValue = Float(greenPtr.pointee) * inverse255
+                let blueValue = Float(bluePtr.pointee) * inverse255
                 
                 if neededData.contains(.Red) { redData![pixel] = redValue }
                 if neededData.contains(.Green) { greenData![pixel] = greenValue }
@@ -148,7 +148,7 @@ public class ImageData
     
     var size : Int { get { return currentSize } }
     
-    public func sourceData(source: ImageDataSource) -> [Float]?
+    open func sourceData(_ source: ImageDataSource) -> [Float]?
     {
         if source.contains(.Red) { return redData }
         if source.contains(.Green) { return greenData }
@@ -159,7 +159,7 @@ public class ImageData
         return nil
     }
     
-    public func getDataSourceImage(source: ImageDataSource) ->NSImage?
+    open func getDataSourceImage(_ source: ImageDataSource) ->NSImage?
     {
         if let sourceArray = sourceData(source) {
             
@@ -170,7 +170,7 @@ public class ImageData
                 var index = 0
                 for y in 0..<currentSize {
                     for x in 0..<currentSize {
-                        pixels[y * rowBytes + x] = UInt8(sourceArray[index] * 255.0)
+                        pixels?[y * rowBytes + x] = UInt8(sourceArray[index] * 255.0)
                         index += 1
                     }
                 }

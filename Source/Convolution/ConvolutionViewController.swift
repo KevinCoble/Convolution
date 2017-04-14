@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import AIToolbox
 
 class ConvolutionViewController: NSViewController, NSTextFieldDelegate {
     
@@ -70,8 +71,8 @@ class ConvolutionViewController: NSViewController, NSTextFieldDelegate {
     @IBOutlet weak var Entry32: NSTextField!
     @IBOutlet weak var Entry33: NSTextField!
     
-    var currentMatrixType : Convolution2DMatrix = .Custom3
-    var entryMatrix : [[NSTextField!]] = [[]]
+    var currentMatrixType : Convolution2DMatrix = .custom3
+    var entryMatrix : [[NSTextField?]] = [[]]
     var fillingEntries = false
     
     var convolution : Convolution2D?
@@ -92,46 +93,46 @@ class ConvolutionViewController: NSViewController, NSTextFieldDelegate {
         currentMatrixType = convolution!.matrixType
         
         //  Initialize the dialog based on the convolution
-        matrixType.selectItemWithTag(currentMatrixType.rawValue)
+        matrixType.selectItem(withTag: currentMatrixType.rawValue)
         setMatrixSize(currentMatrixType.getMatrixSize())
         fillMatrixEntries(convolution!.matrix)
         
         //  Set the controller as the delegate for all the entries
         for row in 0...6 {
             for column in 0...6 {
-                entryMatrix[row][column].delegate = self
+                entryMatrix[row][column]?.delegate = self
             }
         }
     }
     
-    func setMatrixSize(size : Int)
+    func setMatrixSize(_ size : Int)
     {
         var newState: Bool
         
         newState = (size < 7)
         //  Remove or add the outer ring of the matrix
-        HorzLabelM3.hidden = newState
-        for entry in entryMatrix[0] { entry.hidden = newState }
-        HorzLabel3.hidden = newState
-        for entry in entryMatrix[6] { entry.hidden = newState }
-        VertLabelM3.hidden = newState
-        for index in 1..<6 { entryMatrix[index][0].hidden = newState }
-        VertLabel3.hidden = newState
-        for index in 1..<6 { entryMatrix[index][6].hidden = newState }
+        HorzLabelM3.isHidden = newState
+        for entry in entryMatrix[0] { entry?.isHidden = newState }
+        HorzLabel3.isHidden = newState
+        for entry in entryMatrix[6] { entry?.isHidden = newState }
+        VertLabelM3.isHidden = newState
+        for index in 1..<6 { entryMatrix[index][0]?.isHidden = newState }
+        VertLabel3.isHidden = newState
+        for index in 1..<6 { entryMatrix[index][6]?.isHidden = newState }
 
         newState = (size < 5)
         //  Remove/enable the next ring of the matrix
-        HorzLabelM2.hidden = newState
-        for entry in entryMatrix[1] { entry.hidden = newState }
-        HorzLabel2.hidden = newState
-        for entry in entryMatrix[5] { entry.hidden = newState }
-        VertLabelM2.hidden = newState
-        for index in 2..<5 { entryMatrix[index][1].hidden = newState }
-        VertLabel2.hidden = newState
-        for index in 2..<5 { entryMatrix[index][5].hidden = newState }
+        HorzLabelM2.isHidden = newState
+        for entry in entryMatrix[1] { entry?.isHidden = newState }
+        HorzLabel2.isHidden = newState
+        for entry in entryMatrix[5] { entry?.isHidden = newState }
+        VertLabelM2.isHidden = newState
+        for index in 2..<5 { entryMatrix[index][1]?.isHidden = newState }
+        VertLabel2.isHidden = newState
+        for index in 2..<5 { entryMatrix[index][5]?.isHidden = newState }
     }
     
-    func fillMatrixEntries(matrix : [Float])
+    func fillMatrixEntries(_ matrix : [Float])
     {
         fillingEntries = true
         var start = 0
@@ -149,7 +150,7 @@ class ConvolutionViewController: NSViewController, NSTextFieldDelegate {
         var index = 0
         for row in start...end {
             for column in start...end {
-                entryMatrix[row][column].stringValue = "\(matrix[index])"
+                entryMatrix[row][column]?.stringValue = "\(matrix[index])"
                 index += 1
             }
         }
@@ -173,13 +174,14 @@ class ConvolutionViewController: NSViewController, NSTextFieldDelegate {
         var index = 0
         for row in start...end {
             for column in start...end {
-                convolution!.matrix[index] = entryMatrix[row][column].floatValue
+                convolution!.setMatrixValue(atIndex: index, toValue: (entryMatrix[row][column]?.floatValue)!)
                 index += 1
             }
         }
+        convolution!.determineResultRange()
     }
     
-    @IBAction func onMatrixTypeChanged(sender: NSPopUpButton) {
+    @IBAction func onMatrixTypeChanged(_ sender: NSPopUpButton) {
         //  Set up the matrix entry for the size
         let selectedTag = matrixType.selectedTag()
         if (selectedTag >= 0) {
@@ -187,15 +189,13 @@ class ConvolutionViewController: NSViewController, NSTextFieldDelegate {
                 if newType != currentMatrixType {
                     currentMatrixType = newType
                     setMatrixSize(newType.getMatrixSize())
-                    if let newMatrix = newType.getMatrix() {
-                        fillMatrixEntries(newMatrix)
-                    }
+                    fillMatrixEntries(newType.getDefaultMatrix())
                 }
             }
         }
     }
     
-    override func controlTextDidChange(obj: NSNotification)
+    override func controlTextDidChange(_ obj: Notification)
     {
         //  Ignore if filling from initial setting or a matrix type change
         if (fillingEntries) { return }
@@ -204,22 +204,22 @@ class ConvolutionViewController: NSViewController, NSTextFieldDelegate {
         let newMatrixType = currentMatrixType.getCustomOfSameSize()
         if (currentMatrixType != newMatrixType) {
             currentMatrixType = newMatrixType
-            matrixType.selectItemWithTag(newMatrixType.rawValue)
+            matrixType.selectItem(withTag: newMatrixType.rawValue)
         }
     }
     
-    @IBAction func onCancel(sender: NSButton) {
-        presentingViewController?.dismissViewController(self)
+    @IBAction func onCancel(_ sender: NSButton) {
+        presenting?.dismissViewController(self)
     }
     
-    @IBAction func onOK(sender: NSButton) {
+    @IBAction func onOK(_ sender: NSButton) {
         //  Fill the convolution with the entries
-        convolution?.matrixType = currentMatrixType
+        convolution?.setMatrixType(type: currentMatrixType)
         fillMatrixFromEntries()
         
         //  Pass back to the invoking controller
-        let networkVC = presentingViewController as! NetworkViewController
+        let networkVC = presenting as! NetworkViewController
         networkVC.convolution2DEditComplete(convolution!)
-        presentingViewController?.dismissViewController(self)
+        presenting?.dismissViewController(self)
     }
 }
