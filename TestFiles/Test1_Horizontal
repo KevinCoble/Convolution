@@ -2,7 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>autoTest</key>
+	<integer>1</integer>
 	<key>batchSize</key>
+	<integer>1</integer>
+	<key>generatedImages</key>
 	<integer>1</integer>
 	<key>inputs</key>
 	<array>
@@ -36,7 +40,7 @@
 				<array>
 					<dict>
 						<key>idString</key>
-						<string>avg</string>
+						<string>Main</string>
 						<key>networkOperators</key>
 						<array>
 							<dict>
@@ -83,6 +87,95 @@
 									<integer>2</integer>
 									<key>dimensions</key>
 									<array>
+										<integer>4</integer>
+										<integer>1</integer>
+										<integer>1</integer>
+										<integer>1</integer>
+									</array>
+									<key>numDimension</key>
+									<integer>1</integer>
+									<key>weights</key>
+									<array>
+										<real>0.033697500824928284</real>
+										<real>-0.53108954429626465</real>
+										<real>-0.34393590688705444</real>
+										<real>-0.25697299838066101</real>
+										<real>0.25357648730278015</real>
+										<real>-0.06200774759054184</real>
+										<real>-0.094355553388595581</real>
+										<real>-0.18665117025375366</real>
+										<real>0.30886438488960266</real>
+										<real>-0.25521811842918396</real>
+										<real>-0.2931307852268219</real>
+										<real>0.19598454236984253</real>
+										<real>0.35766693949699402</real>
+										<real>-0.17361404001712799</real>
+										<real>0.038498256355524063</real>
+										<real>-0.013147885911166668</real>
+										<real>-0.36088144779205322</real>
+										<real>0.45085412263870239</real>
+										<real>0.048109725117683411</real>
+										<real>-0.098601847887039185</real>
+										<real>0.014206217601895332</real>
+										<real>-0.0083518726751208305</real>
+										<real>-0.13538140058517456</real>
+										<real>-0.28640079498291016</real>
+										<real>-0.025415623560547829</real>
+										<real>-0.037261597812175751</real>
+										<real>0.114219069480896</real>
+										<real>0.082854524254798889</real>
+										<real>-0.27072548866271973</real>
+										<real>-0.12429879605770111</real>
+										<real>0.010208058170974255</real>
+										<real>0.47455698251724243</real>
+										<real>0.27348780632019043</real>
+										<real>0.059085618704557419</real>
+										<real>0.16614209115505219</real>
+										<real>0.05518786609172821</real>
+										<real>0.022419054061174393</real>
+										<real>0.13010279834270477</real>
+										<real>-0.25571495294570923</real>
+										<real>-0.092248350381851196</real>
+										<real>0.25955876708030701</real>
+										<real>-0.10615427047014236</real>
+										<real>-0.25785177946090698</real>
+										<real>-0.42088621854782104</real>
+										<real>-0.54197442531585693</real>
+										<real>-0.34555357694625854</real>
+										<real>-0.19749189913272858</real>
+										<real>0.14052905142307281</real>
+										<real>-0.018386803567409515</real>
+										<real>0.063667990267276764</real>
+										<real>-0.19384180009365082</real>
+										<real>0.26174253225326538</real>
+										<real>-0.53458547592163086</real>
+										<real>0.48069646954536438</real>
+										<real>0.12375576049089432</real>
+										<real>0.44027015566825867</real>
+										<real>0.23165178298950195</real>
+										<real>-0.50592231750488281</real>
+										<real>0.23631556332111359</real>
+										<real>0.23266695439815521</real>
+										<real>-0.24179323017597198</real>
+										<real>0.20230287313461304</real>
+										<real>-0.17943689227104187</real>
+										<real>-0.12363268435001373</real>
+										<real>0.11753834038972855</real>
+										<real>-0.45095646381378174</real>
+										<real>-0.058162085711956024</real>
+										<real>0.4561876654624939</real>
+									</array>
+								</dict>
+								<key>operatorType</key>
+								<integer>2</integer>
+							</dict>
+							<dict>
+								<key>operatorDefinition</key>
+								<dict>
+									<key>activation</key>
+									<integer>2</integer>
+									<key>dimensions</key>
+									<array>
 										<integer>1</integer>
 										<integer>1</integer>
 										<integer>1</integer>
@@ -92,31 +185,21 @@
 									<integer>1</integer>
 									<key>weights</key>
 									<array>
-										<real>0.71928054094314575</real>
-										<real>0.54835855960845947</real>
-										<real>-1.1892198324203491</real>
-										<real>0.44632655382156372</real>
-										<real>-0.19613119959831238</real>
-										<real>1.3105635643005371</real>
-										<real>1.048837423324585</real>
-										<real>0.67128229141235352</real>
-										<real>0.16040346026420593</real>
-										<real>0.21789170801639557</real>
-										<real>0.25152722001075745</real>
-										<real>-0.025666188448667526</real>
-										<real>1.1806042194366455</real>
-										<real>-0.7609182596206665</real>
-										<real>0.5942767858505249</real>
-										<real>0.43876519799232483</real>
-										<real>0.53087109327316284</real>
+										<real>0.40928125381469727</real>
+										<real>-0.34179320931434631</real>
+										<real>-0.48687022924423218</real>
+										<real>1.2596477270126343</real>
+										<real>0.46885854005813599</real>
 									</array>
 								</dict>
 								<key>operatorType</key>
 								<integer>2</integer>
 							</dict>
 						</array>
-						<key>sourceChannelID</key>
-						<string>avg</string>
+						<key>sourceChannelIDs</key>
+						<array>
+							<string>avg</string>
+						</array>
 					</dict>
 				</array>
 			</dict>
@@ -124,10 +207,30 @@
 	</dict>
 	<key>numEpochs</key>
 	<integer>100</integer>
+	<key>repeatTraining</key>
+	<integer>1</integer>
 	<key>size</key>
 	<integer>16</integer>
+	<key>testPath</key>
+	<string>/Users/kevincoble/Documents/HorizontalTest/HorizontalTest</string>
+	<key>trainGeneratorSettings</key>
+	<dict>
+		<key>include</key>
+		<array>
+			<integer>0</integer>
+			<integer>3</integer>
+		</array>
+		<key>noise</key>
+		<array/>
+		<key>numNoise</key>
+		<integer>0</integer>
+	</dict>
+	<key>trainPath</key>
+	<string>/Applications</string>
 	<key>trainingRate</key>
 	<real>0.30000001192092896</real>
+	<key>useGenTestImages</key>
+	<integer>0</integer>
 	<key>weightDecay</key>
 	<real>1</real>
 </dict>

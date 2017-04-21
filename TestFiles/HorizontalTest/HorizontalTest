@@ -2,67 +2,69 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>elements</key>
+    <key>type</key>
+    <string>images</string>
+    <key>elements</key>
 	<array>
 		<dict>
             <key>file</key>
             <string>Horizontal1.png</string>
 			<key>result</key>
-            <integer>1</integer>
+            <integer>0</integer>
 		</dict>
         <dict>
             <key>file</key>
             <string>Vertical1.png</string>
             <key>result</key>
-            <integer>0</integer>
+            <integer>1</integer>
         </dict>
         <dict>
             <key>file</key>
             <string>Horizontal2.png</string>
             <key>result</key>
-            <integer>1</integer>
+            <integer>0</integer>
         </dict>
         <dict>
             <key>file</key>
             <string>Vertical2.png</string>
             <key>result</key>
-            <integer>0</integer>
+            <integer>1</integer>
         </dict>
         <dict>
             <key>file</key>
             <string>Horizontal3.png</string>
             <key>result</key>
-            <integer>1</integer>
+            <integer>0</integer>
         </dict>
         <dict>
             <key>file</key>
             <string>Vertical3.png</string>
             <key>result</key>
-            <integer>0</integer>
+            <integer>1</integer>
         </dict>
         <dict>
             <key>file</key>
             <string>Horizontal4.png</string>
             <key>result</key>
-            <integer>1</integer>
+            <integer>0</integer>
         </dict>
         <dict>
             <key>file</key>
             <string>Vertical4.png</string>
             <key>result</key>
-            <integer>0</integer>
+            <integer>1</integer>
         </dict>
         <dict>
             <key>file</key>
             <string>Horizontal5.png</string>
             <key>result</key>
-            <integer>1</integer>
+            <integer>0</integer>
         </dict>
         <dict>
             <key>file</key>
             <string>Vertical5.png</string>
             <key>result</key>
-            <integer>0</integer>
+            <integer>1</integer>
         </dict>
 	</array>
 </dict>

@@ -12,6 +12,7 @@ import AIToolbox
 class DeepNeuralNetworkController: NSViewController  {
 
     @IBOutlet weak var activationFunctionPopup: NSPopUpButton!
+    @IBOutlet weak var outputShapeBox: NSBox!
     @IBOutlet weak var oneDOutputRadioButton: NSButton!
     @IBOutlet weak var twoDOutputRadioButton: NSButton!
     @IBOutlet weak var threeDOutputRadioButton: NSButton!
@@ -26,6 +27,7 @@ class DeepNeuralNetworkController: NSViewController  {
     @IBOutlet weak var node4Stepper: NSStepper!
     
     //  Inputs
+    var activationOnly = false
     var dimension = 2
     var numNodes = [16, 16, 1, 1]
     var activation = NeuralActivationFunction.sigmoid
@@ -40,20 +42,25 @@ class DeepNeuralNetworkController: NSViewController  {
         //  Set the initial values into the dialog
         activationFunctionPopup.selectItem(withTag: activation.rawValue)
         
+        if (activationOnly) {
+            outputShapeBox.isHidden = true
+        }
+        else {
         if let editSize = editSize {
             switch (editSize.numDimensions) {
-            case 1:
-                onDimensionChange(oneDOutputRadioButton)
-            case 2:
-                onDimensionChange(twoDOutputRadioButton)
-            case 3:
-                onDimensionChange(threeDOutputRadioButton)
-            case 4:
-                onDimensionChange(fourDOutputRadioButton)
-            default:
-                break
+                case 1:
+                    onDimensionChange(oneDOutputRadioButton)
+                case 2:
+                    onDimensionChange(twoDOutputRadioButton)
+                case 3:
+                    onDimensionChange(threeDOutputRadioButton)
+                case 4:
+                    onDimensionChange(fourDOutputRadioButton)
+                default:
+                    break
+                }
+                setFromResultSize(editSize)
             }
-            setFromResultSize(editSize)
         }
     }
     
@@ -157,12 +164,17 @@ class DeepNeuralNetworkController: NSViewController  {
     
     @IBAction func onOK(_ sender: NSButton) {
         let networkVC = presenting as! NetworkViewController
-        numNodes[0] = node1TextField.integerValue
-        numNodes[1] = node2TextField.integerValue
-        numNodes[2] = node3TextField.integerValue
-        numNodes[3] = node4TextField.integerValue
         activation = NeuralActivationFunction(rawValue: activationFunctionPopup.selectedTag())!
-        networkVC.neuralNetworkEditComplete(dimension, numNodes: numNodes, activation: activation)
+        if (activationOnly) {
+            networkVC.nonLinearityEditComplete(activation: activation)
+        }
+        else {
+            numNodes[0] = node1TextField.integerValue
+            numNodes[1] = node2TextField.integerValue
+            numNodes[2] = node3TextField.integerValue
+            numNodes[3] = node4TextField.integerValue
+            networkVC.neuralNetworkEditComplete(dimension, numNodes: numNodes, activation: activation)
+        }
         presenting?.dismissViewController(self)
     }
 }

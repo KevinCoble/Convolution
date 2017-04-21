@@ -1,9 +1,11 @@
 # Convolution
 A Mac GUI for the deep-network convolution routines in AIToolbox
 
-This is an interface to attempt to learn classification labels for images using the DeepNetwork class that will shortly be added to the AIToolbox framework
+This is an interface to attempt to learn classification labels for images using the DeepNetwork class that has been added to the AIToolbox framework.
 
-I will add some instructions on how to use it here over the next few days
+**Make sure you have the latest AIToolbox framework installed!**
+
+I will add some instructions on how to use it here over the next few days.  For now, look at the example experiments at the end of this document.
 
 Still a few missing options, but it learns the first and second batches - recognizing horizontal line images and differentiating circles from lines!
 
@@ -18,7 +20,7 @@ Still a few missing options, but it learns the first and second batches - recogn
 - A layer contains one or more channels.  All channel are processed concurrently, speeding up operation of the network.  The last layer should only have one channel, as it should be providing the output for the deep network.
 
 ##### Channel
-- A set of operations that can be performed individually.  A channel is tagged, so that it's output can be referenced by channels in the next layer.  A channel has a source tag, defining the source of input data from the previous layer (or the network input set if the channel is in the first layer).
+- A set of operations that can be performed individually.  A channel is tagged, so that it's output can be referenced by channels in the next layer.  A channel has a set of source tags, defining the sources of input data from the previous layer (or the network input set if the channel is in the first layer).  Multiple sources must be of a size that can be 'stacked' together to create a single data set that is fed into the first operator of the channel.  For example, two 16x16 inputs can be stacked into a 16x16x2 input set.  A 32x32 can stack onto a 32x32x4 input to get a 32x32x5 input set.
 - A channel contains one or more NetworkOperators.  These are individual operations on the data.  Operators include convolutions, poolings, and feedforward neural networks.  The operators are performed sequentially in the channel, with the first operator getting the inputs from the previous layer, the next operator getting the outputs of the first operator as inputs, etc., until the output of the last operator is tagged with the channel tag for reference by any channels in the next layer.
 
 ##### Labelled Image
@@ -63,7 +65,17 @@ A Feed-Forward Neural Network operator can process any data size, but treats it 
 A Neural Network operator appears in the Network Operator table with a type of "FeedForward NN" and details giving the activation function for the network and the resulting data size (based on the number of nodes in the network).
 
 ##### Definition/Editing Sheet
-FeedForware Neural Network operators have a Neural Network sheet for definition and editing.  See the section for this sheet for more information.
+FeedForward Neural Network operators have a Neural Network sheet for definition and editing.  See the section for this sheet for more information.
+
+#### NonLinearity
+##### Operation Definition
+A NonLinearity operator can process any data size, but treats it as a single linear vector.  The operator performs the selected non-linearity activation function on each element of the input, resulting in an output of the same size.
+
+##### Network Operator Table Information
+A NonLinearity operator appears in the Network Operator table with a type of "NonLinearity" and details giving the activation function for the operation.
+
+##### Definition/Editing Sheet
+NonLinearity operators use the Neural Network sheet for definition and editing, with the result size disabled, leaving just the activation function.  See the section for this sheet for more information.
 
 
 ##  Menu commands
@@ -78,7 +90,7 @@ FeedForware Neural Network operators have a Neural Network sheet for definition 
 
 ##### Network->Initialize
 - All trainable parameters in the model are re-initialized to random values.
-- 
+
 ##### Network->Gradient Check
 - A numeric check of the gradient calculations within the network is performed.  A success or failure message is displayed.
 
@@ -221,17 +233,19 @@ The 2D convolution sheet is used to add or modify a convolution operation.  The 
 
 ##  Experiments
 1. Horizontal lines - learns to discriminate between horizontal and vertical lines
-    - File->Open the Test1_Horizontal file.  This is a simple network with one channel.  A convolution of horizontal gradient, pooling down to 16 squares using maximum, and a single node neural net
-    - Select the HorizontalTest file from the HorizontalTest directory for testing
+    - File->Open the Test1_Horizontal file.  This is a simple network with one channel.  A convolution of horizontal gradient, pooling down to 16 squares using maximum, and a two-layer neural net with 4 and 1 nodes respectively
+    - Select the HorizontalTest file from the HorizontalTest directory for testing (your path will differ from mine)
     - Leave repeat training and Auto testing on.
     - Click 'Train'
-    - The network should fairly quickly learn the horizontal lines, getting a 100% test rate in under a minute.
+    - The network should fairly quickly learn the horizontal lines, getting a 100% test rate in under a minute.  If you continue, the training error will continue down, while the test error goes up!  A classic case of 'overfitting'!
     
 2. Circles and Lines - learns to discriminate between horizontal lines and circles using a trainable convolution operator
-    - File->Open the Test2_Circle file.  This is a simple network with one channel.  A trainable convolution operator, pooling down to 16 squares using average, and a single node neural net
-    - Select the Use Generated Images checkbox for testing
-    - Leave repeat training and Auto testing on.
+    - File->Open the Test2_Circle file.  This is a simple network with one channel.  A trainable convolution operator, pooling down to 16 squares using maximum, and a two-layer neural net with 4 and 1 nodes respectively.
+    - This example uses generated images, so no paths need to be set
+    - Leave repeat training on.
+    - For speedier training, turn off 'Auto test'
     - Click 'Train'
+    - When the training error starts to go down (gets below 40 sometimes) turn auto testing back on to see the test percentage start to creep up into the 90s.  Since images are all generated on the fly, there are a near-infinite number of variations, so we will likely never get a perfect score.
     - The network should medium quickly learn the differences, getting a about 95% test rate in about 5 minutes.
     
 

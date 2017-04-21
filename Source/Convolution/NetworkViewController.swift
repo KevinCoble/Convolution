@@ -33,6 +33,8 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     @IBOutlet weak var deleteOperatorButton: NSButton!
     @IBOutlet weak var topologyErrorField: NSTextField!
     @IBOutlet weak var generatedTrainingImageRadioButton: NSButton!
+    @IBOutlet weak var loadedTrainingImageRadioButton: NSButton!
+    @IBOutlet weak var trainPath: NSPathControl!
     @IBOutlet weak var testImageRadioButton: NSButton!
     @IBOutlet weak var imageDataSelection: NSPopUpButton!
     @IBOutlet weak var trainButton: NSButton!
@@ -50,8 +52,10 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     @IBOutlet weak var classifyPercentField: NSTextField!
     @IBOutlet weak var testPath: NSPathControl!
     @IBOutlet weak var imageClassField: NSTextField!
+    @IBOutlet weak var trainingErrorField: NSTextField!
     @IBOutlet weak var resultingClassField: NSTextField!
     @IBOutlet weak var useGeneratedImagesCheckbox: NSButton!
+    @IBOutlet weak var autoTestCheckbox: NSButton!
     
     //  Settings
     var usingGeneratedData = true
@@ -80,6 +84,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     var currentTestImage : NSImage?
     var currentImageData : ImageData?
     var testFiles : [LabeledImage] = []
+    var trainingFiles : [LabeledImage] = []
     var trainingImageGenerator = LabeledImageGenerator(initIncludes: [.redHorizontalLine, .redVerticalLine], initNoise: [], initNumNoiseItems: 0)
 
     override func viewDidLoad() {
@@ -127,12 +132,62 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
             useGeneratedImagesCheckbox.isEnabled = true
         }
         else {
-            generatedTrainingImageRadioButton.state = NSOffState
             useGeneratedImageForTesting = false
             useGeneratedImagesCheckbox.isEnabled = false
             self.testButton.isEnabled = false
         }
     }
+    
+    @IBAction func onLoadTrainImages(_ sender: Any) {
+        let openPanel = NSOpenPanel()
+        openPanel.title = "Choose a training configuration file"
+        openPanel.begin(){(result:Int) -> Void in
+            if (result == NSFileHandlingPanelOKButton) {
+                do {
+                    //  Show the selected path
+                    self.trainPath.url = openPanel.url
+                    
+                    //  Load the training files
+                    if let path = openPanel.url?.path {
+                        try self.loadTrainingFiles(path)
+                        self.trainButton.isEnabled = true
+                    }
+                }
+                catch {
+                    self.warningAlert("Unable to load training files", information: "Training File Load Error")
+                }
+            }
+        }
+    }
+    
+    
+    func loadTrainingFiles(_ path: String) throws  {
+        trainingFiles = []
+        if (!usingGeneratedData) { trainButton.isEnabled = false }
+        
+        //  Load the property list with the labels and image file names
+        let pList = NSDictionary(contentsOfFile: path)
+        if pList == nil { throw ConvolutionReadErrors.fileNotFoundOrNotPList }
+        let dictionary : Dictionary = pList! as! Dictionary<String, AnyObject>
+        
+        //  Iterate through each item
+        let array = dictionary["elements"] as! NSArray
+        let nspath = NSString(string: path).deletingLastPathComponent
+        for element in array {
+            let elementDict = element as! [String: AnyObject]
+            if let label = elementDict["result"] as? Int {
+                if let imageName = elementDict["file"] as? NSString {
+                    let imagePath = nspath + "/" + (imageName as String)
+                    if let image = NSImage(byReferencingFile: imagePath) {
+                        let labeledImage = LabeledImage(initLabel: label, initImage: image)
+                        trainingFiles.append(labeledImage)
+                    }
+                }
+            }
+        }
+        trainButton.isEnabled = true
+    }
+
     
     @IBAction func imageScaleChanged(_ sender: NSPopUpButton) {
         imageScaledSize = imageScale.selectedTag()
@@ -230,6 +285,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     func train() {
         repeat {
             //  Do for each epoch
+            var errorSum: Float = 0.0
             for _ in 0..<numEpochs {
                 //  Auto-release the image memory - if this is not done we run out!
                 autoreleasepool {
@@ -255,6 +311,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                         
                         //  Feed the data forward
                         deepNetwork.feedForward()
+                        errorSum += deepNetwork.getTotalError(trainingImage.label)
                         let resultClass = deepNetwork.getResultClass()
                         resultingClassField.integerValue = resultClass
                         
@@ -275,6 +332,11 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                     }
                 }
                 if (!isTraining) { return }
+            }
+            
+            //  Write the total error to the display
+            DispatchQueue.main.sync {
+                trainingErrorField.floatValue = errorSum
             }
             
             //  If auto-testing, test now
@@ -395,6 +457,10 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                 addingOperator = true
                 performSegue(withIdentifier: "configureNeuralNet", sender: self)
                 break
+            case .nonLinearityOperation:
+                addingOperator = true
+                performSegue(withIdentifier: "configureNonLinearity", sender: self)
+                break
             }
             checkDeepNetwork()
         }
@@ -420,6 +486,9 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                             break
                         case .feedForwardNetOperation:
                             performSegue(withIdentifier: "configureNeuralNet", sender: self)
+                            break
+                        case .nonLinearityOperation:
+                            performSegue(withIdentifier: "configureNonLinearity", sender: self)
                             break
                         }
                     }
@@ -546,6 +615,18 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                 }
             }
         }
+        if segue.identifier == "configureNonLinearity" {
+            let neuralNetVC = segue.destinationController as! DeepNeuralNetworkController
+            neuralNetVC.activationOnly = true
+            if (addingOperator) {
+                //  Leave at defaults for now
+            }
+            else {
+                if let nonLinearity = editOperator as? DeepNonLinearity {
+                    neuralNetVC.activation = nonLinearity.activation
+                }
+            }
+        }
         if segue.identifier == "imageGenerator" {
             let imageGeneratorVC = segue.destinationController as! LabeledImageGeneratorViewController
             imageGeneratorVC.generator = trainingImageGenerator
@@ -578,12 +659,12 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         checkDeepNetwork()
     }
    
-    func channelEditComplete(channelID: String, inputSourceID: String)
+    func channelEditComplete(channelID: String, inputSourceIDs: [String])
     {
         let layer = layersTable.selectedRow
         if (layer >= 0) {
             if (addingChannel) {
-                let newChannel = DeepChannel(identifier: channelID, sourceChannel: inputSourceID)
+                let newChannel = DeepChannel(identifier: channelID, sourceChannels: inputSourceIDs)
                 deepNetwork.addChannel(layer, newChannel: newChannel)
                 operationsTable.reloadData()
             }
@@ -676,6 +757,32 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         checkDeepNetwork()
         operationsTable.reloadData()
     }
+    
+    func nonLinearityEditComplete(activation: NeuralActivationFunction) {
+        let layer = layersTable.selectedRow
+        if (layer >= 0) {
+            if (layer >= 0) {
+                let channelIndex = channelTable.selectedRow
+                if (channelIndex >= 0) {
+                    if (addingOperator) {
+                        let nonLinearity = DeepNonLinearity(activation: activation)
+                        deepNetwork.addNetworkOperator(layer, channelIndex: channelIndex, newOperator: nonLinearity)
+                    }
+                    else {
+                        let row = operationsTable.selectedRow
+                        if (row >= 0) {
+                            let nonLinearity = DeepNonLinearity(activation: activation)
+                            deepNetwork.replaceNetworkOperator(layer, channelIndex: channelIndex, operatorIndex: row, newOperator: nonLinearity)
+                        }
+                    }
+                }
+            }
+        }
+        
+        //  Update the table
+        checkDeepNetwork()
+        operationsTable.reloadData()
+    }
 
     @IBAction func selectTestPath(_ sender: NSButton) {
         let openPanel = NSOpenPanel()
@@ -713,6 +820,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     
     func loadTestFiles(_ path: String) throws  {
         testFiles = []
+        if (!useGeneratedImageForTesting) { testButton.isEnabled = false }
         
         //  Load the property list with the labels and image file names
         let pList = NSDictionary(contentsOfFile: path)
@@ -734,6 +842,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                 }
             }
         }
+        testButton.isEnabled = true
     }
     
     @IBAction func testNetwork(_ sender: NSButton) {
@@ -890,7 +999,13 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                 case "Identifier":
                     return channel.idString
                 case "SourceID":
-                    return channel.sourceChannelID
+                    var string = channel.sourceChannelIDs[0]
+                    if (channel.sourceChannelIDs.count > 1) {
+                        for index in 1..<channel.sourceChannelIDs.count {
+                            string += ", " + channel.sourceChannelIDs[index]
+                        }
+                    }
+                    return string
                 case "Output":
                     return channel.resultSize.asString()
                 default:
@@ -1034,6 +1149,22 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         modelDictionary["weightDecay"] = weightDecay as AnyObject?
         modelDictionary["batchSize"] = batchSize as AnyObject?
         modelDictionary["numEpochs"] = numEpochs as AnyObject?
+        let genImageAsInt = usingGeneratedData ? 1 : 0
+        modelDictionary["generatedImages"] = genImageAsInt as AnyObject?
+        let repeatTrainAsInt = repeatTraining ? 1 : 0
+        modelDictionary["repeatTraining"] = repeatTrainAsInt as AnyObject?
+        if let path = trainPath.url?.path {
+            modelDictionary["trainPath"] = path as AnyObject?
+        }
+        
+        //  Add the testing settings
+        if let path = testPath.url?.path {
+            modelDictionary["testPath"] = path as AnyObject?
+        }
+        let useGeneratedDataAsInt = useGeneratedImageForTesting ? 1 : 0
+        modelDictionary["useGenTestImages"] = useGeneratedDataAsInt as AnyObject?
+        let autoTestAsInt = autoTest ? 1 : 0
+        modelDictionary["autoTest"] = autoTestAsInt as AnyObject?
        
         //  Convert to a property list (NSDictionary) and write
         let pList = NSDictionary(dictionary: modelDictionary)
@@ -1054,7 +1185,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         imageScaledSize = sizeValue!
         imageScale.selectItem(withTag: imageScaledSize)
         
-        //  Read the test image generator settings
+        //  Read the image generator settings
         let trainingImageGeneratorDict = dictionary["trainGeneratorSettings"] as? [String: AnyObject]
         if trainingImageGeneratorDict == nil { throw ConvolutionReadErrors.badFormat }
         let tempGen = LabeledImageGenerator(fromDictionary: trainingImageGeneratorDict!)
@@ -1112,6 +1243,71 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         numEpochs = epochValue!
         numEpochsStepper.integerValue = numEpochs
         numEpochsTextField.integerValue = numEpochs
+        if let path = dictionary["trainPath"] as? NSString {
+            trainPath.url = URL(fileURLWithPath: path as String)
+            //  Load the training files
+            do {
+                if let path = trainPath.url?.path {
+                    try self.loadTrainingFiles(path)
+                    trainButton.isEnabled = true
+                }
+            }
+            catch {
+                trainButton.isEnabled = false
+            }
+        }
+        let genImageAsInt = dictionary["generatedImages"] as? NSInteger
+        if genImageAsInt == nil { throw ConvolutionReadErrors.badFormat }
+        if (genImageAsInt! != 0) {
+            usingGeneratedData = true
+            generatedTrainingImageRadioButton.state =  NSOnState
+            trainButton.isEnabled = true
+        }
+        else {
+            usingGeneratedData = false
+            loadedTrainingImageRadioButton.state = NSOnState
+        }
+        let repeatTrainAsInt = dictionary["repeatTraining"] as? NSInteger
+        if repeatTrainAsInt == nil { throw ConvolutionReadErrors.badFormat }
+        if (genImageAsInt! != 0) {
+            repeatTraining = true
+            repeatTrainCheckbox.state = NSOnState
+        }
+        else {
+            repeatTraining = false
+            repeatTrainCheckbox.state = NSOffState
+        }
+        
+        //  Testing settings
+        if let path = dictionary["testPath"] as? NSString {
+            testPath.url = URL(fileURLWithPath: path as String)
+            //  Attempt to load the training files
+            do {
+                if let path = testPath.url?.path {
+                    try self.loadTestFiles(path)
+                }
+                testButton.isEnabled = true
+            }
+            catch {
+                testButton.isEnabled = false
+            }
+        }
+        let useGeneratedDataAsInt = dictionary["useGenTestImages"] as? NSInteger
+        if useGeneratedDataAsInt == nil { throw ConvolutionReadErrors.badFormat }
+        if (useGeneratedDataAsInt! != 0) {
+            useGeneratedImageForTesting = true
+            useGeneratedImagesCheckbox.state = NSOnState
+            self.testButton.isEnabled = true
+        }
+        else {
+            useGeneratedImageForTesting = false
+            useGeneratedImagesCheckbox.state = NSOffState
+            if (trainingFiles.count <= 0) { self.testButton.isEnabled = false }
+        }
+        let autoTestAsInt = dictionary["autoTest"] as? NSInteger
+        if autoTestAsInt == nil { throw ConvolutionReadErrors.badFormat }
+        autoTest = (autoTestAsInt != 0)
+        autoTestCheckbox.state = autoTest ? NSOnState : NSOffState
     }
     
     @IBAction func saveDocument(_ sender: AnyObject) {
