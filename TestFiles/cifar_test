@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>type</key>
+    <string>cifar</string>
+    <key>size</key>
+    <integer>32</integer>
+    <key>subclass</key>
+    <integer>0</integer>
+    <key>elements</key>
+	<array>
+        <dict>
+            <key>file</key>
+            <string>test_batch.bin</string>
+            <key>count</key>
+            <integer>10000</integer>
+        </dict>
+	</array>
+</dict>
+</plist>

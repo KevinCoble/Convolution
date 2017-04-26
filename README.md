@@ -3,11 +3,13 @@ A Mac GUI for the deep-network convolution routines in AIToolbox
 
 This is an interface to attempt to learn classification labels for images using the DeepNetwork class that has been added to the AIToolbox framework.
 
+Training and testing is done with images that can be auto-generated, come from standard image files, or using standard MNIST or cifar data sets.
+
 **Make sure you have the latest AIToolbox framework installed!**
 
-I will add some instructions on how to use it here over the next few days.  For now, look at the example experiments at the end of this document.
+I need to add some more instructions on how to use it effectively.  For now, look at the example experiments at the end of this document.
 
-Still a few missing options, but it learns the first and second batches - recognizing horizontal line images and differentiating circles from lines!
+Still a few missing options, but it can learn to recognizing horizontal line images and differentiating circles from lines, and even get almost 90% success on the MNIST classification problem in about a minute of training!
 
 
 ##  Concepts
@@ -34,6 +36,9 @@ Still a few missing options, but it learns the first and second batches - recogn
 
 ##### Data Size
 - The size of data in a deep network can be one, two, three, or four dimensional.  The Convolution program uses image data, so most data is presented as a two-dimensional array, or a 1-dimensional result vector from a network layer.  A size is defined with the number of dimensions and the size of each dimension.  Unused dimensions are often given as having a size of 1.
+
+##### Loaded Image file
+- When loading images for training or testing, you point the program at a plist file that describes the image files to be used.  These files are property lists that list the files that contain the images and the labels for those images.  An example of each type of loadable data is provided in the examples (at this time discrete image files, MNIST files and cifar files are available for use).
 
 
 ##  Network Operators
@@ -99,7 +104,15 @@ NonLinearity operators use the Neural Network sheet for definition and editing, 
 - This selection list specifies the pixel size and width that both training and testing images will be scaled to before being used by the DeepNetwork class.  Valid sizes are square with each side a power of two between 4 and 256 pixels.
 
 #### Training Image source
-- Currently this section is not operable.  All training images are randomly generated images of red lines, labelled with class 1 for horizontal lines, and class 0 for vertical lines.
+
+##### Generated/Loaded Images Radio Buttons
+- The radio buttons select between using a loaded set of image files, or generating an image dynamically based on generator configuration.
+ 
+##### Loaded Image path selection
+- If you select the path control, you will be asked to find a plist file describing the image list for training.  The images are loaded immediately on selection.  If a large data set (like MNIST or cifar training sets), this operation may take some time.
+ 
+##### Configure Image Generator
+- Clicking on the Configure button activates a dialog that allows you to select how dynamic image generation will create images.  Various lines and circles can be placed on the image as learnable items, or as noise.
 
 #### Training
 ##### Train Button
@@ -248,7 +261,21 @@ The 2D convolution sheet is used to add or modify a convolution operation.  The 
     - When the training error starts to go down (gets below 40 sometimes) turn auto testing back on to see the test percentage start to creep up into the 90s.  Since images are all generated on the fly, there are a near-infinite number of variations, so we will likely never get a perfect score.
     - The network should medium quickly learn the differences, getting a about 95% test rate in about 5 minutes.
     
-
+3. Simple MNIST - learns to find digits in the MNIST data set with a single neural network layer
+    - Download and extract the MINST data set to a folder.  The data can be found [here](http://yann.lecun.com/exdb/mnist/).
+    - Copy the MNIST_train and MNIST_test files from the TestFiles directory into the directory with the downloaded MNIST files.  These are the plist files that define the images to be used.  You may need to edit them if the data file names have changed.
+    - File->Open the Test3_MNIST file.  This is a simple network with one channel.  There is only one 10-node layer with fill connection to the 32x32 inputs.
+    - The file paths saved for the experiment will not match your directory structure.  Click on the file path for training and select the MNIST_train file you moved earlier.  Click on the Select button for testing and select the MNIST_test file
+    - Leave repeat training on.
+    - Make sure 'Auto test' is of
+    - Click 'Test'.  You will likely get about 6.7% accuracy  before training.  Just guessing would get 10%.
+    - Click 'Train'.
+    - After about a minute or two, click Stop to stop training.
+    - Click 'Test' again.  I have been getting just under 90% on my tests.  It is unlikely that more training will improve it much.  A much more complicated network is needed to learn subtleties in the data.
+    
+4. cifar Files - plist files are provided for the cifar data set
+    - Download and extract the cifar data set to a folder.  The data can be found [here](https://www.cs.toronto.edu/~kriz/cifar.html).
+    - Copy in the cifar_train and cifar_test files from the TestFiles directory into the directory with the downloaded MNIST files.  These are the plist files that define the image files to be used.  You may need to edit them if the data file names have changed.
 
 
 ## License

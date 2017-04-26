@@ -162,30 +162,183 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     
     
     func loadTrainingFiles(_ path: String) throws  {
-        trainingFiles = []
         if (!usingGeneratedData) { trainButton.isEnabled = false }
+        
+        do {
+            trainingFiles = try loadFileSet(path)
+        }
+        catch {
+            trainingFiles = []
+            throw ConvolutionReadErrors.fileNotFoundOrNotPList
+        }
+        
+        if trainingFiles.count > 0 { trainButton.isEnabled = true }
+    }
+    
+    func loadFileSet(_ path: String) throws ->[LabeledImage] {
+        var loadedFiles : [LabeledImage] = []
         
         //  Load the property list with the labels and image file names
         let pList = NSDictionary(contentsOfFile: path)
         if pList == nil { throw ConvolutionReadErrors.fileNotFoundOrNotPList }
         let dictionary : Dictionary = pList! as! Dictionary<String, AnyObject>
         
+        //  Check the type
+        let fileType = dictionary["type"] as? NSString
+        if fileType == nil { throw ConvolutionReadErrors.badFormat }
+        if (fileType! != "images" && fileType! != "MNIST" && fileType! != "cifar") {
+            throw ConvolutionReadErrors.unrecognizedFormat
+        }
+        
+        //  If a cifar file, get the parameters
+        var cifarSize = 32
+        var cifarSubclass = false
+        if (fileType! == "cifar") {
+            if let readCifarSize = dictionary["size"] as? Int {
+                cifarSize = readCifarSize
+            }
+            if let readCifarSubclass = dictionary["subclass"] as? Int {
+                if readCifarSubclass > 0 { cifarSubclass = true }
+            }
+        }
+        
         //  Iterate through each item
         let array = dictionary["elements"] as! NSArray
         let nspath = NSString(string: path).deletingLastPathComponent
         for element in array {
             let elementDict = element as! [String: AnyObject]
-            if let label = elementDict["result"] as? Int {
-                if let imageName = elementDict["file"] as? NSString {
-                    let imagePath = nspath + "/" + (imageName as String)
-                    if let image = NSImage(byReferencingFile: imagePath) {
-                        let labeledImage = LabeledImage(initLabel: label, initImage: image)
-                        trainingFiles.append(labeledImage)
+            if (fileType! == "images") {
+                if let label = elementDict["result"] as? Int {
+                    if let imageName = elementDict["file"] as? NSString {
+                        let imagePath = nspath + "/" + (imageName as String)
+                        if let image = NSImage(byReferencingFile: imagePath) {
+                            let labeledImage = LabeledImage(initLabel: label, initImage: image)
+                            loadedFiles.append(labeledImage)
+                        }
+                    }
+                }
+            }
+                
+            else if (fileType! == "MNIST") {
+                if let imagefileName = elementDict["images"] as? NSString {
+                    if let labelsfileName = elementDict["labels"] as? NSString {
+                        let imagePath = nspath + "/" + (imagefileName as String)
+                        let labelPath = nspath + "/" + (labelsfileName as String)
+                        if let imageData = NSData(contentsOfFile: imagePath) {
+                            if let labelData = NSData(contentsOfFile: labelPath) {
+                                var imageOffset = 16
+                                var labelOffset = 8
+                                //  Check the initial magic words
+                                var rng = NSRange(location: 0, length: 4)
+                                var magicWord : UInt32 = 0
+                                imageData.getBytes(&magicWord, range: rng)
+                                if (magicWord.bigEndian != 0x00000803) { throw ConvolutionReadErrors.badFormat }
+                                labelData.getBytes(&magicWord, range: rng)
+                                if (magicWord.bigEndian != 0x00000801) { throw ConvolutionReadErrors.badFormat }
+                                //  Get the counts
+                                var imageCount : UInt32 = 0
+                                var labelCount : UInt32 = 0
+                                rng = NSRange(location: 4, length: 4)
+                                imageData.getBytes(&imageCount, range: rng)
+                                labelData.getBytes(&labelCount, range: rng)
+                                if (imageCount.bigEndian != labelCount.bigEndian) { throw ConvolutionReadErrors.badFormat }
+                                //  Get the image size
+                                var numRows : UInt32 = 0
+                                var numColumns : UInt32 = 0
+                                rng = NSRange(location: 8, length: 4)
+                                imageData.getBytes(&numRows, range: rng)
+                                rng = NSRange(location: 8, length: 4)
+                                imageData.getBytes(&numColumns, range: rng)
+                                let columns = Int(numColumns.bigEndian)
+                                let rows = Int(numRows.bigEndian)
+                                var pixel : UInt8 = 0
+                                
+                                var imagePixels = [UInt8](repeating: 0, count: Int(imageCount.bigEndian) * columns * rows)
+                                rng = NSRange(location: imageOffset, length: Int(imageCount.bigEndian) * columns * rows)
+                                imageData.getBytes(&imagePixels, range: rng)
+                                imageOffset = 0
+                                
+                                //  Get each labeled image
+                                for _ in 0..<imageCount.bigEndian {
+                                    //  Get a bitmap representation
+                                    if let representation = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: columns, pixelsHigh: rows, bitsPerSample: 8, samplesPerPixel: 1, hasAlpha: false, isPlanar: false, colorSpaceName: NSCalibratedWhiteColorSpace, bytesPerRow: 0, bitsPerPixel: 8) {
+                                        let rowBytes = representation.bytesPerRow
+                                        let pixels = representation.bitmapData
+                                        for y in 0..<columns {
+                                            for x in 0..<rows {
+                                                pixels?[y * rowBytes + x] = imagePixels[imageOffset]
+                                                imageOffset += 1
+                                            }
+                                        }
+                                        rng = NSRange(location: labelOffset, length: 1)
+                                        labelData.getBytes(&pixel, range: rng)
+                                        labelOffset += 1
+                                        
+                                        let image = NSImage(size: NSSize(width: columns, height: rows))
+                                        image.addRepresentation(representation)
+                                        let labeledImage = LabeledImage(initLabel: Int(pixel), initImage: image)
+                                        loadedFiles.append(labeledImage)
+                                    }
+                                }
+                                return loadedFiles
+                            }
+                        }
+                    }
+                }
+                throw ConvolutionReadErrors.badFormat
+            }
+                
+            else if (fileType! == "cifar") {
+                if let imagefileName = elementDict["file"] as? NSString {
+                    let imagePath = nspath + "/" + (imagefileName as String)
+                    if let count = elementDict["count"] as? Int {
+                        var numBytes = (cifarSize * cifarSize * 3) + 1
+                        if (cifarSubclass) { numBytes += 1 }
+                        numBytes *= count
+                        if let imageData = NSData(contentsOfFile: imagePath) {
+                            var imagePixels = [UInt8](repeating: 0, count: numBytes)
+                            let rng = NSRange(location: 0, length: numBytes)
+                            imageData.getBytes(&imagePixels, range: rng)
+                            var imageOffset = 0
+                            var destOffset = 0
+                            let planeOffset = cifarSize * cifarSize
+                            for _ in 0..<count {
+                                var label = Int(imagePixels[imageOffset])
+                                if (cifarSubclass) {
+                                    label *= 10
+                                    imageOffset += 1
+                                    label += Int(imagePixels[imageOffset])
+                                }
+                                imageOffset += 1
+                                if let representation = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: cifarSize, pixelsHigh: cifarSize, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: NSCalibratedRGBColorSpace, bytesPerRow: cifarSize * 4, bitsPerPixel: 32) {
+                                    let pixels = representation.bitmapData
+                                    for y in 0..<cifarSize {
+                                        for x in 0..<cifarSize {
+                                            destOffset = (y * cifarSize + x) * 4
+                                            pixels?[destOffset] = imagePixels[imageOffset]  //  Red
+                                            destOffset += 1
+                                            pixels?[destOffset] = imagePixels[imageOffset + planeOffset]  //  Green
+                                            destOffset += 1
+                                            pixels?[destOffset] = imagePixels[imageOffset + planeOffset + planeOffset]  //  Blue
+                                            imageOffset += 1
+                                            destOffset += 1
+                                            pixels?[destOffset] = 255       //  Alpha
+                                        }
+                                    }
+                                    imageOffset += planeOffset + planeOffset
+                                    
+                                    let image = NSImage(size: NSSize(width: cifarSize, height: cifarSize))
+                                    image.addRepresentation(representation)
+                                    let labeledImage = LabeledImage(initLabel: label, initImage: image)
+                                    loadedFiles.append(labeledImage)
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        trainButton.isEnabled = true
+        return loadedFiles
     }
 
     
@@ -298,7 +451,13 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                         if (!isTraining) { break }      //  Problem if we 'return' out of the autoreleasepool closure
                         
                         //  Get an image
-                        let trainingImage = trainingImageGenerator.getImage()
+                        var trainingImage : LabeledImage
+                        if (usingGeneratedData) {
+                            trainingImage = trainingImageGenerator.getImage()
+                        }
+                        else {
+                            trainingImage = randomTrainingImage()
+                        }
                         
                         currentTestImage = trainingImage.image
                         currentTestLabel = trainingImage.label
@@ -346,6 +505,13 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
                 }
             }
         } while repeatTraining
+    }
+    
+    func randomTrainingImage() -> LabeledImage
+    {
+        let index = Int(arc4random_uniform(UInt32(trainingFiles.count)))
+        
+        return trainingFiles[index]
     }
     
     func setDisplayImage()
@@ -819,30 +985,17 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
     }
     
     func loadTestFiles(_ path: String) throws  {
-        testFiles = []
         if (!useGeneratedImageForTesting) { testButton.isEnabled = false }
         
-        //  Load the property list with the labels and image file names
-        let pList = NSDictionary(contentsOfFile: path)
-        if pList == nil { throw ConvolutionReadErrors.fileNotFoundOrNotPList }
-        let dictionary : Dictionary = pList! as! Dictionary<String, AnyObject>
-        
-        //  Iterate through each item
-        let array = dictionary["elements"] as! NSArray
-        let nspath = NSString(string: path).deletingLastPathComponent
-        for element in array {
-            let elementDict = element as! [String: AnyObject]
-            if let label = elementDict["result"] as? Int {
-                if let imageName = elementDict["file"] as? NSString {
-                    let imagePath = nspath + "/" + (imageName as String)
-                    if let image = NSImage(byReferencingFile: imagePath) {
-                        let labeledImage = LabeledImage(initLabel: label, initImage: image)
-                        testFiles.append(labeledImage)
-                    }
-                }
-            }
+        do {
+            testFiles = try loadFileSet(path)
         }
-        testButton.isEnabled = true
+        catch {
+            testFiles = []
+            throw ConvolutionReadErrors.fileNotFoundOrNotPList
+        }
+        
+        if testFiles.count > 0 { testButton.isEnabled = true }
     }
     
     @IBAction func testNetwork(_ sender: NSButton) {
@@ -1171,7 +1324,7 @@ class NetworkViewController: NSViewController, NSTableViewDataSource, NSTableVie
         if !pList.write(toFile: path, atomically: false) { throw ConvolutionWriteErrors.failedWriting }
     }
     
-    enum ConvolutionReadErrors: Error { case fileNotFoundOrNotPList; case badFormat }
+    enum ConvolutionReadErrors: Error { case fileNotFoundOrNotPList; case badFormat ; case unrecognizedFormat}
     func loadFile(_ path: String) throws
     {
         //  Read the property list

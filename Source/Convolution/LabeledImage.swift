@@ -14,12 +14,23 @@ open class LabeledImage
     let label : Int
     let scaledBitmap : NSBitmapImageRep?
     var image: NSImage?
-    let imageSize = 256
+    let imageSize : Int
     
     init(initLabel: Int, initImage: NSImage)
     {
         //  Save the labels
         label = initLabel
+        
+        //  Get the multiple of 2 that fits the image coming in
+        var fitSize = 4
+        let largerDimension = Int(max(initImage.size.width, initImage.size.height))
+        for power in 2..<8 {
+            if (1 << power) >= largerDimension {
+                fitSize = (1 << power)
+                break
+            }
+        }
+        imageSize = fitSize
         
         //  Scale to the appropriate size
         scaledBitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: imageSize, pixelsHigh: imageSize, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: NSCalibratedRGBColorSpace, bytesPerRow: imageSize * 4, bitsPerPixel: 32)
